@@ -43,9 +43,9 @@ public class Main {
     public static class MyBot extends TelegramLongPollingBot {
         private static final String BOT_USERNAME = "@Uzbek_cat_bot";
         private static final String BOT_TOKEN = "8577521489:AAGbp2MvcMXZlnK-KbDdmPm8WArYlJ4PxWk";
-        private final long ADMIN_ID = 7038296036l;
+        private final long ADMIN_ID = 673018191l;
 
-        private final String CHANNEL_USERNAME = "@tajriba_1234";
+        private final String CHANNEL_USERNAME = "@uzbek_cats";
 
         // State va ma'lumotlar
         private final Map<Long, String> stateMap = new ConcurrentHashMap<>();
