@@ -943,24 +943,20 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-
             InlineKeyboardButton b1 = new InlineKeyboardButton();
             b1.setText("📢 Reklama joylash");
             b1.setCallbackData("menu_reklama");
             rows.add(Collections.singletonList(b1));
-
-
-            InlineKeyboardButton b3 = new InlineKeyboardButton();
-            b3.setText("👤 Admin bilan bog'lanish");
-            b3.setCallbackData("menu_admin");
-            rows.add(Collections.singletonList(b3));
-
 
             InlineKeyboardButton b2 = new InlineKeyboardButton();
             b2.setText("🏆 Konkurs");
             b2.setCallbackData("menu_konkurs");
             rows.add(Collections.singletonList(b2));
 
+            InlineKeyboardButton b3 = new InlineKeyboardButton();
+            b3.setText("👤 Admin bilan bog'lanish");
+            b3.setCallbackData("menu_admin");
+            rows.add(Collections.singletonList(b3));
 
             if (chatId == ADMIN_ID) {
                 InlineKeyboardButton adminBtn = new InlineKeyboardButton();
@@ -968,7 +964,6 @@ public class Main {
                 adminBtn.setCallbackData("admin_panel");
                 rows.add(Collections.singletonList(adminBtn));
             }
-
 
             markup.setKeyboard(rows);
             msg.setReplyMarkup(markup);
@@ -1074,28 +1069,11 @@ public class Main {
         }
 
         private void sendKonkursShartlar(long chatId) throws TelegramApiException {
-                String shartlarText = "⬇️ Qatnashish uchun:\n\n" +
-                        "🔗 Bot sizga taqdim etgan referral linkni iloji boricha ko'proq do'stlaringizga ulashing. " +
-                        "Sizni linkingizdan qo'shilgan har bir ishtirokchiga 1 balldan beriladi. " +
-                        "Sovg'alar eng ko'p ball to'plagan ishtirokchiga beriladi. " +
-                        "Konkurs har xafta bo'ladi va xaftaning juma kuni 1-o'rinda turgan ishtirokchimiz g'olib bo'ladi va kanal linkini tashlaydi.\n\n"+
-                        "\uD83D\uDCDA  KONKURSIDA ISHTIROK ETING!\n" +
-                        "\n" +
-                        "\uD83C\uDF81 Mukofotlar:\n" +
-                        "\uD83E\uDD47 Scottish fold black\n" +
-                        "Siz toplagan ovoz ochib ketmaydi toki \uD83C\uDFC6 g’olib bo’lguningizga qadar \uD83D\uDCAF\n" +
-                        "\n" +
-                        "✅ Qatnashish juda oson:\n" +
-                        "1. Botga start bosing\n" +
-                        "2. Kanallarga a'zo bo‘ling\n" +
-                        "3. Do‘stlaringizni taklif qiling\n" +
-                        "4. Eng ko‘p ball to‘plab, mukofotlarni qo‘lga kiriting!\n" +
-                        "\n" +
-                        "⚡\uFE0F Shoshiling, sizdan avval sovg'alarga ega chiqib qo‘yishmasin \uD83D\uDE09\n" +
-                        "\n" +
-                        "\uD83D\uDD17 Ishtirok etish uchun: https://t.me/Uzbekcatsbot?start=7038296036";
-
-
+            String shartlarText = "⬇️ Qatnashish uchun:\n\n" +
+                    "🔗 Bot sizga taqdim etgan referral linkni iloji boricha ko'proq do'stlaringizga ulashing. " +
+                    "Sizni linkingizdan qo'shilgan har bir ishtirokchiga 1 balldan beriladi. " +
+                    "Sovg'alar eng ko'p ball to'plagan ishtirokchiga beriladi. " +
+                    "Konkurs har xafta bo'ladi va xaftaning juma kuni 1-o'rinda turgan ishtirokchimiz g'olib bo'ladi va kanal linkini tashlaydi.";
 
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -2551,4 +2529,4 @@ public class Main {
             execute(msg);
         }
     }
-}//Qatnashish uchun:
+}
