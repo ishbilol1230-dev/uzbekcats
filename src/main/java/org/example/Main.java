@@ -73,8 +73,9 @@ public class Main {
         private final Map<String, List<AdRecord>> statisticsMap = new ConcurrentHashMap<>();
         private final Map<Long, String> userUsernameMap = new ConcurrentHashMap<>();
 
-        // Konkurs rasm o'zgartirish
+        // Konkurs ma'lumotlari - ADMIN O'ZGARTIRISHI UCHUN
         private String currentKonkursImageUrl = "https://i.postimg.cc/YvGp1gHt/image.jpg";
+        private String currentKonkursText = "🎁 Scottish fold black\n\nSiz toplagan ovoz ochib ketmaydi toki 🏆 g'olib bo'lgungizgacha 💯";
 
         // Reklama filtrlash
         private final Set<String> bannedWords = Set.of(
@@ -385,25 +386,42 @@ public class Main {
                 return;
             }
 
-            // Admin konkurs rasmini yangilash
-            if (chatId == ADMIN_ID && "admin_await_konkurs_image".equals(state)) {
-                if (msg.hasPhoto()) {
-                    List<PhotoSize> photos = msg.getPhoto();
-                    String fileId = photos.get(photos.size()-1).getFileId();
+            // ========== ADMIN KONKURS O'ZGARTIRISH ==========
+            if (chatId == ADMIN_ID) {
+                // Admin konkurs rasmini yangilash
+                if ("admin_await_konkurs_image".equals(state)) {
+                    if (msg.hasPhoto()) {
+                        List<PhotoSize> photos = msg.getPhoto();
+                        String fileId = photos.get(photos.size()-1).getFileId();
 
-                    // Yangi rasm URL'sini olish
-                    String newImageUrl = getFileUrl(fileId);
-                    currentKonkursImageUrl = newImageUrl;
+                        // Yangi rasm URL'sini olish
+                        String newImageUrl = getFileUrl(fileId);
+                        currentKonkursImageUrl = newImageUrl;
 
-                    sendText(chatId, "✅ Konkurs rasmi muvaffaqiyatli yangilandi!");
-                    stateMap.put(chatId, "");
+                        // Endi matn so'raymiz
+                        stateMap.put(chatId, "admin_await_konkurs_text");
+                        sendText(chatId, "✅ Rasm qabul qilindi! Endi yangi konkurs matnini yuboring:");
 
-                    // Yangi rasmni ko'rsatish
-                    sendKonkursMukofot(chatId);
-                } else {
-                    sendText(chatId, "❌ Iltimos, faqat rasm yuboring!");
+                    } else {
+                        sendText(chatId, "❌ Iltimos, faqat rasm yuboring!");
+                    }
+                    return;
                 }
-                return;
+
+                // Admin konkurs matnini yangilash
+                if ("admin_await_konkurs_text".equals(state)) {
+                    if (msg.hasText()) {
+                        currentKonkursText = msg.getText();
+                        sendText(chatId, "✅ Konkurs rasmi va matni muvaffaqiyatli yangilandi!");
+                        stateMap.put(chatId, "");
+
+                        // Yangi rasm va matnni ko'rsatish
+                        sendKonkursMukofot(chatId);
+                    } else {
+                        sendText(chatId, "❌ Iltimos, faqat matn yuboring!");
+                    }
+                    return;
+                }
             }
 
             // Admin izoh qoldirish
@@ -587,7 +605,7 @@ public class Main {
 
             System.out.println("Callback received: " + data + " from: " + chatId);
 
-            // Admin konkurs rasm o'zgartirish
+            // ========== ADMIN KONKURS O'ZGARTIRISH ==========
             if (data.equals("admin_konkurs_image")) {
                 if (fromId == ADMIN_ID) {
                     handleAdminKonkursImage(chatId);
@@ -1046,10 +1064,11 @@ public class Main {
                 SendPhoto photo = new SendPhoto();
                 photo.setChatId(String.valueOf(chatId));
                 photo.setPhoto(new InputFile(currentKonkursImageUrl));
-                photo.setCaption("🎁 Scottish fold black\n\nSiz toplagan ovoz ochib ketmaydi toki 🏆 g'olib bo'lgungizgacha 💯");
+                photo.setCaption(currentKonkursText);
                 execute(photo);
             } catch (Exception e) {
-                sendText(chatId, "🎁 Scottish fold black\n\nSiz toplagan ovoz ochib ketmaydi toki 🏆 g'olib bo'lgungizgacha 💯");
+                // Agar rasm yuklashda xatolik bo'lsa, faqat matnni yuboramiz
+                sendText(chatId, currentKonkursText);
             }
         }
 
