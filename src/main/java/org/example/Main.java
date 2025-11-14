@@ -912,8 +912,7 @@ public class Main {
                             sendText(chatId, "💰 Mushukchangizni nech pulga sotmoqchisiz? \n" +
                                     "\n" +
                                     "Eslatma bozor narxlarni hissobga olgan xolatda, mushugingizga mos narx qo'ying. Sizga xam sotib oluvchi mijozga xam maqul bo'ladigan narx qo'ying Alloh barakasini bersin .\n"+
-                                    "Masalan:100.000 so'm yoki 100$ da qiling "+
-                                    "iltimos narxi yozyotkanda tuliq yozing");
+                                    "Masalan:100.000 so'm yoki 100$ da qiling iltimos");
                         }
                     } else {
                         sendText(chatId, "✅ Ma'lumotlaringiz qabul qilindi! Admin tekshirib kanalga joylaydi.");
