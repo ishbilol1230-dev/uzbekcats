@@ -73,6 +73,9 @@ public class Main {
         private final Map<String, List<AdRecord>> statisticsMap = new ConcurrentHashMap<>();
         private final Map<Long, String> userUsernameMap = new ConcurrentHashMap<>();
 
+        // Konkurs rasm o'zgartirish
+        private String currentKonkursImageUrl = "https://i.postimg.cc/YvGp1gHt/image.jpg";
+
         // Reklama filtrlash
         private final Set<String> bannedWords = Set.of(
                 "mushuk sotiladi",
@@ -103,7 +106,6 @@ public class Main {
 
         // Logo URL
         private final String LOGO_URL = "https://i.postimg.cc/PCGRfS7g/image.png";
-        private final String KONKURS_IMAGE_URL = "https://i.postimg.cc/YvGp1gHt/image.jpg";
 
         // Konkurs ishtirokchilari
         private final List<KonkursParticipant> konkursParticipants = Arrays.asList(
@@ -383,6 +385,27 @@ public class Main {
                 return;
             }
 
+            // Admin konkurs rasmini yangilash
+            if (chatId == ADMIN_ID && "admin_await_konkurs_image".equals(state)) {
+                if (msg.hasPhoto()) {
+                    List<PhotoSize> photos = msg.getPhoto();
+                    String fileId = photos.get(photos.size()-1).getFileId();
+
+                    // Yangi rasm URL'sini olish
+                    String newImageUrl = getFileUrl(fileId);
+                    currentKonkursImageUrl = newImageUrl;
+
+                    sendText(chatId, "✅ Konkurs rasmi muvaffaqiyatli yangilandi!");
+                    stateMap.put(chatId, "");
+
+                    // Yangi rasmni ko'rsatish
+                    sendKonkursMukofot(chatId);
+                } else {
+                    sendText(chatId, "❌ Iltimos, faqat rasm yuboring!");
+                }
+                return;
+            }
+
             // Admin izoh qoldirish
             if (chatId == ADMIN_ID && state.startsWith("admin_decline_reason_")) {
                 String userIdStr = state.substring("admin_decline_reason_".length());
@@ -563,6 +586,14 @@ public class Main {
             execute(new AnswerCallbackQuery(cb.getId()));
 
             System.out.println("Callback received: " + data + " from: " + chatId);
+
+            // Admin konkurs rasm o'zgartirish
+            if (data.equals("admin_konkurs_image")) {
+                if (fromId == ADMIN_ID) {
+                    handleAdminKonkursImage(chatId);
+                }
+                return;
+            }
 
             // Admin o'zgartirish callbacks
             if (data.startsWith("admin_set_breed_")) {
@@ -934,6 +965,12 @@ public class Main {
             }
         }
 
+        // ========== ADMIN KONKURS RASM O'ZGARTIRISH ==========
+        private void handleAdminKonkursImage(long adminId) throws TelegramApiException {
+            stateMap.put(adminId, "admin_await_konkurs_image");
+            sendText(adminId, "🖼️ Iltimos, yangi konkurs rasmini yuboring (faqat rasm):");
+        }
+
         // ========== ASOSIY MENYU ==========
         private void sendMainMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
@@ -1008,7 +1045,7 @@ public class Main {
             try {
                 SendPhoto photo = new SendPhoto();
                 photo.setChatId(String.valueOf(chatId));
-                photo.setPhoto(new InputFile(KONKURS_IMAGE_URL));
+                photo.setPhoto(new InputFile(currentKonkursImageUrl));
                 photo.setCaption("🎁 Scottish fold black\n\nSiz toplagan ovoz ochib ketmaydi toki 🏆 g'olib bo'lgungizgacha 💯");
                 execute(photo);
             } catch (Exception e) {
@@ -1073,7 +1110,22 @@ public class Main {
                     "🔗 Bot sizga taqdim etgan referral linkni iloji boricha ko'proq do'stlaringizga ulashing. " +
                     "Sizni linkingizdan qo'shilgan har bir ishtirokchiga 1 balldan beriladi. " +
                     "Sovg'alar eng ko'p ball to'plagan ishtirokchiga beriladi. " +
-                    "Konkurs har xafta bo'ladi va xaftaning juma kuni 1-o'rinda turgan ishtirokchimiz g'olib bo'ladi va kanal linkini tashlaydi.";
+                    "Konkurs har xafta bo'ladi va xaftaning juma kuni 1-o'rinda turgan ishtirokchimiz g'olib bo'ladi va kanal linkini tashlaydi.\n\n"+
+                    "\uD83D\uDCDA  KONKURSIDA ISHTIROK ETING!\n" +
+                    "\n" +
+                    "\uD83C\uDF81 Mukofotlar:\n" +
+                    "\uD83E\uDD47 Scottish fold black\n" +
+                    "Siz toplagan ovoz ochib ketmaydi toki \uD83C\uDFC6 g'olib bo'lguningizga qadar \uD83D\uDCAF\n" +
+                    "\n" +
+                    "✅ Qatnashish juda oson:\n" +
+                    "1. Botga start bosing\n" +
+                    "2. Kanallarga a'zo bo'ling\n" +
+                    "3. Do'stlaringizni taklif qiling\n" +
+                    "4. Eng ko'p ball to'plab, mukofotlarni qo'lga kiriting!\n" +
+                    "\n" +
+                    "⚡\uFE0F Shoshiling, sizdan avval sovg'alarga ega chiqib qo'yishmasin \uD83D\uDE09\n" +
+                    "\n" +
+                    "\uD83D\uDD17 Ishtirok etish uchun: https://t.me/Uzbekcatsbot?start=7038296036";
 
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -1788,6 +1840,12 @@ public class Main {
             statsBtn.setText("📊 Statistika");
             statsBtn.setCallbackData("admin_stats");
             rows.add(Collections.singletonList(statsBtn));
+
+            // Yangi tugma - konkurs rasm o'zgartirish
+            InlineKeyboardButton konkursImageBtn = new InlineKeyboardButton();
+            konkursImageBtn.setText("🖼️ Konkurs rasmini o'zgartirish");
+            konkursImageBtn.setCallbackData("admin_konkurs_image");
+            rows.add(Collections.singletonList(konkursImageBtn));
 
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Asosiy menyu");
