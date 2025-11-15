@@ -39,14 +39,12 @@ public class Main {
             e.printStackTrace();
         }
     }
-
     public static class MyBot extends TelegramLongPollingBot {
-        private static final String BOT_USERNAME = "@Uzbek_cat_bot";
-        private static final String BOT_TOKEN = "8577521489:AAGbp2MvcMXZlnK-KbDdmPm8WArYlJ4PxWk";
-        private final long ADMIN_ID = 673018191l;
+        private static final String BOT_USERNAME = "@@biloltajriba_bot";
+        private static final String BOT_TOKEN = "8461025978:AAFq7OKAsnDOSyKwRm_nnruQKltsjBlTMxA";
+        private final long ADMIN_ID = 7038296036l;
 
-        private final String CHANNEL_USERNAME = "@uzbek_cats";
-
+        private final String CHANNEL_USERNAME = "@t.me/tajriba_1234";
         // State va ma'lumotlar
         private final Map<Long, String> stateMap = new ConcurrentHashMap<>();
         private final Map<Long, List<String>> photosMap = new ConcurrentHashMap<>();
@@ -73,7 +71,7 @@ public class Main {
         private final Map<String, List<AdRecord>> statisticsMap = new ConcurrentHashMap<>();
         private final Map<Long, String> userUsernameMap = new ConcurrentHashMap<>();
 
-        // Konkurs ma'lumotlari
+        // Konkurs ma'lumotlari - ADMIN O'ZGARTIRISHI UCHUN
         private String currentKonkursImageUrl = "https://i.postimg.cc/YvGp1gHt/image.jpg";
         private String currentKonkursText = "🎁 Scottish fold black\n\nSiz toplagan ovoz ochib ketmaydi toki 🏆 g'olib bo'lgungizgacha 💯";
 
@@ -388,25 +386,34 @@ public class Main {
 
             // ========== ADMIN KONKURS O'ZGARTIRISH ==========
             if (chatId == ADMIN_ID) {
+                // Admin konkurs rasmini yangilash
                 if ("admin_await_konkurs_image".equals(state)) {
                     if (msg.hasPhoto()) {
                         List<PhotoSize> photos = msg.getPhoto();
                         String fileId = photos.get(photos.size()-1).getFileId();
+
+                        // Yangi rasm URL'sini olish
                         String newImageUrl = getFileUrl(fileId);
                         currentKonkursImageUrl = newImageUrl;
+
+                        // Endi matn so'raymiz
                         stateMap.put(chatId, "admin_await_konkurs_text");
                         sendText(chatId, "✅ Rasm qabul qilindi! Endi yangi konkurs matnini yuboring:");
+
                     } else {
                         sendText(chatId, "❌ Iltimos, faqat rasm yuboring!");
                     }
                     return;
                 }
 
+                // Admin konkurs matnini yangilash
                 if ("admin_await_konkurs_text".equals(state)) {
                     if (msg.hasText()) {
                         currentKonkursText = msg.getText();
                         sendText(chatId, "✅ Konkurs rasmi va matni muvaffaqiyatli yangilandi!");
                         stateMap.put(chatId, "");
+
+                        // Yangi rasm va matnni ko'rsatish
                         sendKonkursMukofot(chatId);
                     } else {
                         sendText(chatId, "❌ Iltimos, faqat matn yuboring!");
@@ -419,10 +426,13 @@ public class Main {
             if (chatId == ADMIN_ID && state.startsWith("admin_decline_reason_")) {
                 String userIdStr = state.substring("admin_decline_reason_".length());
                 long userId = Long.parseLong(userIdStr);
+
                 String reason = msg.getText();
                 declineReasonsMap.put(userId, reason);
+
                 sendText(userId, "❌ E'loningiz tasdiqlanmadi!\n\n📝 Sabab: " + reason);
                 sendText(ADMIN_ID, "✅ Foydalanuvchiga rad etish sababi yuborildi.");
+
                 stateMap.put(chatId, "");
                 return;
             }
@@ -434,6 +444,7 @@ public class Main {
 
                 if (userId != null) {
                     String newValue = msg.getText().trim();
+
                     switch (editType) {
                         case "manzil":
                             manzilMap.put(userId, newValue);
@@ -448,6 +459,7 @@ public class Main {
                             sendText(ADMIN_ID, "✅ Narx o'zgartirildi: " + newValue);
                             break;
                     }
+
                     sendAdminEditMenu(ADMIN_ID, userId);
                     stateMap.put(chatId, "");
                 }
@@ -461,13 +473,10 @@ public class Main {
                 return;
             }
 
-            // Narx kiritish - VILOYATDAN KEYIN, TELEFONDAN OLDIN
+            // Narx kiritish
             if ("await_price".equals(state)) {
                 priceMap.put(chatId, msg.getText().trim());
-                stateMap.put(chatId, "await_phone");
-                sendText(chatId, "💰 Narx: " + msg.getText().trim() + " so'm\n\n" +
-                        "📍 Manzil: " + manzilMap.getOrDefault(chatId, "—") +
-                        "\n📞 Endi telefon raqamingizni yuboring: (masalan +998 90 123 45 67)");
+                sendPaymentInstructions(chatId);
                 return;
             }
 
@@ -497,7 +506,7 @@ public class Main {
                     return;
                 }
 
-                // Telefon raqam kiritish - NARXDAN KEYIN
+                // Telefon raqam kiritish
                 if ("await_phone".equals(state)) {
                     if (!isValidPhoneNumber(text)) {
                         sendText(chatId, "❌ Iltimos, telefon raqamni to'g'ri formatda kiriting:\n\n+998 ** *** ** **\n\nMasalan: +998 90 123 45 67\n\nQayta urinib ko'ring:");
@@ -594,19 +603,7 @@ public class Main {
 
             System.out.println("Callback received: " + data + " from: " + chatId);
 
-            // ========== ADMIN KONKURS O'ZGARTIRISH ==========
-            if (data.equals("admin_konkurs_image")) {
-                if (fromId == ADMIN_ID) {
-                    handleAdminKonkursImage(chatId);
-                }
-                return;
-            }
 
-            // Admin o'zgartirish callbacks
-            if (data.startsWith("admin_set_breed_")) {
-                handleAdminSetBreed(chatId, data);
-                return;
-            }
 
             if (data.startsWith("admin_edit_field_")) {
                 handleAdminEditField(chatId, data);
@@ -814,20 +811,8 @@ public class Main {
                 case "viloyat_toshkent_shahar":
                     String viloyat = data.replace("viloyat_", "").replace("_", " ");
                     manzilMap.put(chatId, viloyat);
-
-                    // "Sotish" yoki "Vyazka" bo'lsa, NARX so'ra
-                    String adType = adTypeMap.getOrDefault(chatId, "");
-                    if ("sotish".equals(adType) || "vyazka".equals(adType)) {
-                        stateMap.put(chatId, "await_price");
-                        sendText(chatId, "💰 Mushukchangizni nech pulga " +
-                                ("sotish".equals(adType) ? "sotmoqchisiz?" : "vyazkaga qo'moqchisiz?") +
-                                "\n\nEslatma: Bozor narxlarni hisobga olgan holda, mushugingizga mos narx qo'ying.\n" +
-                                "Masalan: 100.000 so'm yoki 100$");
-                    } else {
-                        // "Hadiya" bo'lsa, telefon raqam so'ra
-                        stateMap.put(chatId, "await_phone");
-                        sendText(chatId, "📍 Manzil: " + viloyat + "\n📞 Endi telefon raqamingizni yuboring: (masalan +998 90 123 45 67)");
-                    }
+                    stateMap.put(chatId, "await_phone");
+                    sendText(chatId, "📍 Manzil: " + viloyat + "\n📞 Endi telefon raqamingizni yuboring: (masalan +998 90 123 45 67)");
                     break;
 
                 // Yordam uchun viloyat tanlash
@@ -906,8 +891,15 @@ public class Main {
                 // Preview tugmalari
                 case "preview_confirm":
                     if ("sotish".equals(adTypeMap.get(chatId)) || "vyazka".equals(adTypeMap.get(chatId))) {
-                        // Narx allaqachon kiritilgan, to'lov ko'rsatmalariga o'tadi
-                        sendPaymentInstructions(chatId);
+                        if (priceMap.containsKey(chatId) && priceMap.get(chatId) != null && !priceMap.get(chatId).trim().isEmpty()) {
+                            sendPaymentInstructions(chatId);
+                        } else {
+                            stateMap.put(chatId, "await_price");
+                            sendText(chatId, "💰 Mushukchangizni nech pulga sotmoqchisiz? \n" +
+                                    "\n" +
+                                    "Eslatma bozor narxlarni hissobga olgan xolatda, mushugingizga mos narx qo'ying. Sizga xam sotib oluvchi mijozga xam maqul bo'ladigan narx qo'ying Alloh barakasini bersin .\n"+
+                                    "Masalan:100.000 so'm yoki 100$ da qiling iltimos");
+                        }
                     } else {
                         sendText(chatId, "✅ Ma'lumotlaringiz qabul qilindi! Admin tekshirib kanalga joylaydi.");
                         notifyAdmin(chatId);
@@ -937,6 +929,7 @@ public class Main {
                         if (fromId == ADMIN_ID) {
                             String uidStr = data.substring("approve_".length());
                             long uid = Long.parseLong(uidStr);
+
                             postToChannel(uid);
                             sendText(uid, "✅ E'loningiz kanalga joylandi!");
                             deleteAdminMessages(uid);
@@ -946,6 +939,7 @@ public class Main {
                         if (fromId == ADMIN_ID) {
                             String uidStr = data.substring("decline_".length());
                             long uid = Long.parseLong(uidStr);
+
                             stateMap.put(ADMIN_ID, "admin_decline_reason_" + uid);
                             sendText(ADMIN_ID, "📝 Foydalanuvchiga yuborish uchun rad etish sababini yozing:");
                         }
@@ -975,6 +969,8 @@ public class Main {
                     break;
             }
         }
+
+
 
         // ========== ASOSIY MENYU ==========
         private void sendMainMenu(long chatId) throws TelegramApiException {
@@ -1054,6 +1050,7 @@ public class Main {
                 photo.setCaption(currentKonkursText);
                 execute(photo);
             } catch (Exception e) {
+                // Agar rasm yuklashda xatolik bo'lsa, faqat matnni yuboramiz
                 sendText(chatId, currentKonkursText);
             }
         }
@@ -1064,6 +1061,7 @@ public class Main {
 
             for (int i = 0; i < konkursParticipants.size(); i++) {
                 KonkursParticipant participant = konkursParticipants.get(i);
+
                 String medal = "";
                 if (i == 0) medal = "🥇";
                 else if (i == 1) medal = "🥈";
@@ -1071,9 +1069,11 @@ public class Main {
                 else medal = "👤";
 
                 ratingText.append(medal).append(" ").append(participant.name);
+
                 if (!participant.username.isEmpty()) {
                     ratingText.append(" (").append(participant.username).append(")");
                 }
+
                 ratingText.append("\nBall: ").append(participant.score).append(" 🎯\n\n");
             }
 
@@ -1487,12 +1487,6 @@ public class Main {
             }
 
             sb.append("📍 Manzil: ").append(manzilMap.getOrDefault(chatId, "—")).append("\n");
-
-            // NARX faqat "Sotish" va "Vyazka" uchun
-            if ("sotish".equals(adType) || "vyazka".equals(adType)) {
-                sb.append("💰 Narx: ").append(priceMap.getOrDefault(chatId, "—")).append(" so'm\n");
-            }
-
             sb.append("📞 Telefon: ").append(phoneMap.getOrDefault(chatId, "—")).append("\n");
 
             if (!"hadiya".equals(adType)) {
@@ -1506,10 +1500,16 @@ public class Main {
 
                 int mushukSoni = mushukSoniMap.getOrDefault(chatId, 1);
                 sb.append("🐾 Mushuklar soni: ").append(mushukSoni).append(" ta\n");
-                sb.append("🧬 Nasl olish: ").append(sterilizationMap.getOrDefault(chatId, "—")).append("\n");
+
+                if (!"hadiya".equals(adType)) {
+                    String narx = priceMap.getOrDefault(chatId, "—");
+                    sb.append("💰 Narx: ").append(narx).append(" so'm\n");
+                }
             }
 
             sb.append("\nMa'lumotlaringiz to'g'rimi?");
+            System.out.println("Preview caption: " + sb.toString());
+
             return sb.toString();
         }
 
@@ -1843,6 +1843,7 @@ public class Main {
             statsBtn.setCallbackData("admin_stats");
             rows.add(Collections.singletonList(statsBtn));
 
+            // Yangi tugma - konkurs rasm o'zgartirish
             InlineKeyboardButton konkursImageBtn = new InlineKeyboardButton();
             konkursImageBtn.setText("🖼️ Konkurs rasmini o'zgartirish");
             konkursImageBtn.setCallbackData("admin_konkurs_image");
@@ -2264,8 +2265,8 @@ public class Main {
                 caption.append("📞 Nomer: ").append(phone).append("\n\n");
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
-                caption.append("\uD83D\uDCFD\uFE0F [YouTube](https://youtu.be/vdwgSB7_amw)  ");
-                caption.append("\uD83C\uDF10 [Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ");
+                caption.append("\uD83D\uDCFD\uFE0F [YouTube](https://youtu.be/vdwgSB7_amw) | ");
+                caption.append("\uD83C\uDF10 [Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
                 caption.append("✉\uFE0F [Telegram](https://t.me/uzbek_cats)");
 
             } else if ("vyazka".equals(adType)) {
@@ -2277,8 +2278,8 @@ public class Main {
                 caption.append("📞 Tel: ").append(phone).append("\n\n");
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
-                caption.append("\uD83D\uDCFD\uFE0F [YouTube](https://youtu.be/vdwgSB7_amw)  ");
-                caption.append("\uD83C\uDF10 [Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ");
+                caption.append("\uD83D\uDCFD\uFE0F [YouTube](https://youtu.be/vdwgSB7_amw) | ");
+                caption.append("\uD83C\uDF10 [Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
                 caption.append("✉\uFE0F [Telegram](https://t.me/uzbek_cats)");
 
             } else {
@@ -2290,8 +2291,8 @@ public class Main {
                 caption.append("📞 Tel: ").append(phone).append("\n\n");
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
-                caption.append("\uD83D\uDCFD\uFE0F [YouTube](https://youtu.be/vdwgSB7_amw)  ");
-                caption.append("\uD83C\uDF10 [Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ");
+                caption.append("\uD83D\uDCFD\uFE0F [YouTube](https://youtu.be/vdwgSB7_amw) | ");
+                caption.append("\uD83C\uDF10 [Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
                 caption.append("✉\uFE0F [Telegram](https://t.me/uzbek_cats)");
             }
 
@@ -2317,14 +2318,23 @@ public class Main {
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
+                // FAQAT LOGO QISMINI O'CHIRDIK (quyidagi qatorlar olib tashlandi)
+                // URL logoUrl = new URL(LOGO_URL);
+                // BufferedImage originalLogo = ImageIO.read(logoUrl);
+                // int logoSize = originalImage.getWidth() / 17;
+                // BufferedImage circularLogo = createCircularImage(originalLogo, logoSize);
+                // int logoX = 10;
+                // int logoY = 10;
+                // g2d.drawImage(circularLogo, logoX, logoY, null);
+
                 // "UzbekCats" yozuvini SAQLADIK
                 g2d.setFont(new Font("Arial", Font.BOLD, 25));
                 g2d.setColor(Color.YELLOW);
 
                 String watermarkText = "@UzbekCats";
                 FontMetrics metrics = g2d.getFontMetrics();
-                int textX = 10;
-                int textY = 30;
+                int textX = 10; // Logosiz, to'g'ridan-to'g'ri chap tomondan boshlaymiz
+                int textY = 30; // Yuqori chetga joylashtiramiz
 
                 g2d.drawString(watermarkText, textX, textY);
                 g2d.dispose();
@@ -2549,9 +2559,10 @@ public class Main {
         }
 
         // ========== ADMIN XABARLARNI O'CHIRISH ==========
+// ========== ADMIN XABARLARNI O'CHIRISH ==========
         private void deleteAdminMessages(long userId) {
             try {
-                System.out.println("🗑️ Foydalanuvchi ma'lumotlari o'chirilmoqda: " + userId);
+                System.out.println("🗑 Foydalanuvchi ma'lumotlari o'chirilmoqda: " + userId);
 
                 // 1. FOYDALANUVCHI MA'LUMOTLARINI TOZALASH
                 photosMap.remove(userId);
@@ -2612,12 +2623,8 @@ public class Main {
             }
         }
 
-        // ========== ADMIN KONKURS RASM O'ZGARTIRISH ==========
-        private void handleAdminKonkursImage(long adminId) throws TelegramApiException {
-            stateMap.put(adminId, "admin_await_konkurs_image");
-            sendText(adminId, "🖼️ Iltimos, yangi konkurs rasmini yuboring (faqat rasm):");
-        }
 
+// ADMIN KONKURS RASM O'ZGARTIRISH
         // ========== YORDAM METODLARI ==========
         private void sendText(long chatId, String text) throws TelegramApiException {
             SendMessage msg = new SendMessage();
@@ -2626,4 +2633,4 @@ public class Main {
             execute(msg);
         }
     }
-}
+}// Mushukchangizni nech pulga sotmoqchisiz?
