@@ -62,6 +62,7 @@ public class Main {
         private final Map<Long, Integer> mushukSoniMap = new ConcurrentHashMap<>();
         private final Map<Long, String> sterilizationMap = new ConcurrentHashMap<>();
         private final Map<Long, String> platformaMap = new ConcurrentHashMap<>();
+        private final Map<Long, String> valyutaMap = new ConcurrentHashMap<>(); // Yangi: valyuta turi
         private final AtomicLong adIdCounter = new AtomicLong(1000);
 
         // Admin ma'lumotlari
@@ -104,9 +105,6 @@ public class Main {
         // Zotlar sahifalari
         private final Map<Integer, List<String>> breedPages = new HashMap<>();
         private final List<String> allBreeds = new ArrayList<>();
-
-        // Logo URL
-        private final String LOGO_URL = "https://i.postimg.cc/PCGRfS7g/image.png";
 
         // Konkurs ishtirokchilari
         private final List<KonkursParticipant> konkursParticipants = Arrays.asList(
@@ -214,14 +212,9 @@ public class Main {
         }
 
         @Override
-        public String getBotUsername() {
-            return BOT_USERNAME;
-        }
-
+        public String getBotUsername() { return BOT_USERNAME; }
         @Override
-        public String getBotToken() {
-            return BOT_TOKEN;
-        }
+        public String getBotToken() { return BOT_TOKEN; }
 
         @Override
         public void onUpdateReceived(Update update) {
@@ -396,7 +389,7 @@ public class Main {
                 if ("admin_await_konkurs_image".equals(state)) {
                     if (msg.hasPhoto()) {
                         List<PhotoSize> photos = msg.getPhoto();
-                        String fileId = photos.get(photos.size() - 1).getFileId();
+                        String fileId = photos.get(photos.size()-1).getFileId();
                         String newImageUrl = getFileUrl(fileId);
                         currentKonkursImageUrl = newImageUrl;
                         stateMap.put(chatId, "admin_await_konkurs_text");
@@ -470,17 +463,18 @@ public class Main {
             if ("await_price".equals(state)) {
                 priceMap.put(chatId, msg.getText().trim());
                 stateMap.put(chatId, "await_phone");
-                sendText(chatId, "💰 Narx: " + msg.getText().trim() + " so'm\n\n" +
+                sendText(chatId, "💰 Narx: " + msg.getText().trim() +
+                        ("so'm".equals(valyutaMap.getOrDefault(chatId, "so'm")) ? " so'm" : " $") + "\n\n" +
                         "📍 Manzil: " + manzilMap.getOrDefault(chatId, "—") +
                         "\n📞 Endi telefon raqamingizni yuboring: (masalan +998 90 123 45 67)");
                 return;
             }
 
-            // Chek qabul qilish
+            // Chek qabul qilish - TO'G'IRLANAGAN QISMI
             if ("wait_check".equals(state)) {
                 if (msg.hasPhoto()) {
                     List<PhotoSize> photos = msg.getPhoto();
-                    String fileId = photos.get(photos.size() - 1).getFileId();
+                    String fileId = photos.get(photos.size()-1).getFileId();
                     checkMap.put(chatId, fileId);
                     sendText(chatId, "✅ Chek qabul qilindi. Admin tekshiradi.");
                     notifyAdmin(chatId);
@@ -528,7 +522,7 @@ public class Main {
                             state.startsWith("yordam_") && state.endsWith("_photo")
             )) {
                 List<PhotoSize> photos = msg.getPhoto();
-                String fileId = photos.get(photos.size() - 1).getFileId();
+                String fileId = photos.get(photos.size()-1).getFileId();
 
                 if (!photosMap.containsKey(chatId)) {
                     photosMap.put(chatId, new ArrayList<>());
@@ -664,6 +658,19 @@ public class Main {
                 return;
             }
 
+            // Valyuta tanlash
+            if (data.equals("valyuta_som") || data.equals("valyuta_dollar")) {
+                String valyuta = data.equals("valyuta_som") ? "so'm" : "$";
+                valyutaMap.put(chatId, valyuta);
+
+                stateMap.put(chatId, "await_price");
+                sendText(chatId, "💰 Mushukchangizni nech " + valyuta + "ga " +
+                        ("sotish".equals(adTypeMap.get(chatId)) ? "sotmoqchisiz?" : "vyazkaga qo'moqchisiz?") +
+                        "\n\nEslatma: Bozor narxlarni hisobga olgan holda, mushugingizga mos narx qo'ying.\n" +
+                        "Masalan: " + ("so'm".equals(valyuta) ? "100.000" : "100"));
+                return;
+            }
+
             switch (data) {
                 case "menu_reklama":
                     sendAdTypeSelection(chatId);
@@ -734,7 +741,7 @@ public class Main {
                 // Reklama turi
                 case "adtype_sotish":
                     adTypeMap.put(chatId, "sotish");
-                    startAdProcess(chatId);
+                    sendMushukSoniSelection(chatId); // BIRINCHI MUSHUK SONI TANLASH
                     break;
                 case "adtype_hadiya":
                     adTypeMap.put(chatId, "hadiya");
@@ -753,7 +760,7 @@ public class Main {
                     handleContinueProcess(chatId);
                     break;
 
-                // MUSHUK SONI TANLASH
+                // MUSHUK SONI TANLASH - BIRINCHI BOSQICH
                 case "mushuk_1":
                     System.out.println("Mushuk 1 tanlandi: " + chatId);
                     handleMushukSoni(chatId, 1);
@@ -812,30 +819,18 @@ public class Main {
                     break;
 
                 // Viloyat tanlash (reklama uchun)
-                case "viloyat_andijon":
-                case "viloyat_buxoro":
-                case "viloyat_fargona":
-                case "viloyat_jizzax":
-                case "viloyat_xorazm":
-                case "viloyat_namangan":
-                case "viloyat_navoiy":
-                case "viloyat_qashqadaryo":
-                case "viloyat_samarqand":
-                case "viloyat_sirdaryo":
-                case "viloyat_surxondaryo":
-                case "viloyat_toshkent":
+                case "viloyat_andijon": case "viloyat_buxoro": case "viloyat_fargona":
+                case "viloyat_jizzax": case "viloyat_xorazm": case "viloyat_namangan":
+                case "viloyat_navoiy": case "viloyat_qashqadaryo": case "viloyat_samarqand":
+                case "viloyat_sirdaryo": case "viloyat_surxondaryo": case "viloyat_toshkent":
                 case "viloyat_toshkent_shahar":
                     String viloyat = data.replace("viloyat_", "").replace("_", " ");
                     manzilMap.put(chatId, viloyat);
 
-                    // "Sotish" yoki "Vyazka" bo'lsa, NARX so'ra
+                    // "Sotish" yoki "Vyazka" bo'lsa, VALYUTA TANLASH
                     String adType = adTypeMap.getOrDefault(chatId, "");
                     if ("sotish".equals(adType) || "vyazka".equals(adType)) {
-                        stateMap.put(chatId, "await_price");
-                        sendText(chatId, "💰 Mushukchangizni nech pulga " +
-                                ("sotish".equals(adType) ? "sotmoqchisiz?" : "vyazkaga qo'moqchisiz?") +
-                                "\n\nEslatma: Bozor narxlarni hisobga olgan holda, mushugingizga mos narx qo'ying.\n" +
-                                "Masalan: 100.000 so'm yoki 100$");
+                        sendValyutaSelection(chatId);
                     } else {
                         // "Hadiya" bo'lsa, telefon raqam so'ra
                         stateMap.put(chatId, "await_phone");
@@ -844,18 +839,10 @@ public class Main {
                     break;
 
                 // Yordam uchun viloyat tanlash
-                case "yordam_viloyat_andijon":
-                case "yordam_viloyat_buxoro":
-                case "yordam_viloyat_fargona":
-                case "yordam_viloyat_jizzax":
-                case "yordam_viloyat_xorazm":
-                case "yordam_viloyat_namangan":
-                case "yordam_viloyat_navoiy":
-                case "yordam_viloyat_qashqadaryo":
-                case "yordam_viloyat_samarqand":
-                case "yordam_viloyat_sirdaryo":
-                case "yordam_viloyat_surxondaryo":
-                case "yordam_viloyat_toshkent":
+                case "yordam_viloyat_andijon": case "yordam_viloyat_buxoro": case "yordam_viloyat_fargona":
+                case "yordam_viloyat_jizzax": case "yordam_viloyat_xorazm": case "yordam_viloyat_namangan":
+                case "yordam_viloyat_navoiy": case "yordam_viloyat_qashqadaryo": case "yordam_viloyat_samarqand":
+                case "yordam_viloyat_sirdaryo": case "yordam_viloyat_surxondaryo": case "yordam_viloyat_toshkent":
                 case "yordam_viloyat_toshkent_shahar":
                     String yordamViloyat = data.replace("yordam_viloyat_", "").replace("_", " ");
                     manzilMap.put(chatId, yordamViloyat);
@@ -873,18 +860,9 @@ public class Main {
                     break;
 
                 // Yosh tanlash
-                case "age_1_oylik":
-                case "age_2_oylik":
-                case "age_3_oylik":
-                case "age_4_oylik":
-                case "age_5_oylik":
-                case "age_6_oylik":
-                case "age_7_oylik":
-                case "age_8_oylik":
-                case "age_9_oylik":
-                case "age_10_oylik":
-                case "age_11_oylik":
-                case "age_1_yosh":
+                case "age_1_oylik": case "age_2_oylik": case "age_3_oylik": case "age_4_oylik":
+                case "age_5_oylik": case "age_6_oylik": case "age_7_oylik": case "age_8_oylik":
+                case "age_9_oylik": case "age_10_oylik": case "age_11_oylik": case "age_1_yosh":
                     String age = data.replace("age_", "").replace("_", " ");
                     ageMap.put(chatId, age);
 
@@ -918,27 +896,23 @@ public class Main {
                 // NASL OLISH TANLASH
                 case "sterilization_yes":
                     sterilizationMap.put(chatId, "Nasl olish mumkin");
-                    if ("sotish".equals(adTypeMap.get(chatId)) || "vyazka".equals(adTypeMap.get(chatId))) {
-                        sendMushukSoniSelection(chatId);
-                    } else {
-                        sendPreview(chatId);
-                    }
+                    sendPreview(chatId); // TO'G'RIDAN-TO'G'RI PREVIEWGA O'TISH
                     break;
                 case "sterilization_no":
                     sterilizationMap.put(chatId, "Nasl olish mumkin emas");
-                    if ("sotish".equals(adTypeMap.get(chatId)) || "vyazka".equals(adTypeMap.get(chatId))) {
-                        sendMushukSoniSelection(chatId);
-                    } else {
-                        sendPreview(chatId);
-                    }
+                    sendPreview(chatId); // TO'G'RIDAN-TO'G'RI PREVIEWGA O'TISH
                     break;
 
-                // Preview tugmalari
+                // Preview tugmalari - TO'G'RILANGAN QISMI
                 case "preview_confirm":
-                    if ("sotish".equals(adTypeMap.get(chatId)) || "vyazka".equals(adTypeMap.get(chatId))) {
-                        // Narx allaqachon kiritilgan, to'lov ko'rsatmalariga o'tadi
+                    String currentAdType = adTypeMap.getOrDefault(chatId, "");
+                    System.out.println("Preview confirm: " + chatId + ", Ad Type: " + currentAdType);
+
+                    if ("sotish".equals(currentAdType) || "vyazka".equals(currentAdType)) {
+                        System.out.println("Sending payment instructions for: " + chatId);
                         sendPaymentInstructions(chatId);
                     } else {
+                        System.out.println("Direct admin notification for: " + chatId);
                         sendText(chatId, "✅ Ma'lumotlaringiz qabul qilindi! Admin tekshirib kanalga joylaydi.");
                         notifyAdmin(chatId);
                         stateMap.put(chatId, "waiting_admin");
@@ -1006,11 +980,37 @@ public class Main {
             }
         }
 
+        // ========== VALYUTA TANLASH ==========
+        private void sendValyutaSelection(long chatId) throws TelegramApiException {
+            SendMessage msg = new SendMessage();
+            msg.setChatId(String.valueOf(chatId));
+            msg.setText("💰 Valyutani tanlang:");
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            InlineKeyboardButton somBtn = new InlineKeyboardButton();
+            somBtn.setText("🇺🇿 So'mda");
+            somBtn.setCallbackData("valyuta_som");
+            rows.add(Collections.singletonList(somBtn));
+
+            InlineKeyboardButton dollarBtn = new InlineKeyboardButton();
+            dollarBtn.setText("💵 Dollarda");
+            dollarBtn.setCallbackData("valyuta_dollar");
+            rows.add(Collections.singletonList(dollarBtn));
+
+            markup.setKeyboard(rows);
+            msg.setReplyMarkup(markup);
+            execute(msg);
+        }
+
         // ========== ASOSIY MENYU ==========
         private void sendMainMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
-            msg.setText("🐱 Assalomu alaykum! UzbekCats botiga xush kelibsiz!\n\nQuyidagilardan birini tanlang:");
+            msg.setText("Assalamu alaykum!\n" +
+                    "\n" +
+                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -1142,7 +1142,7 @@ public class Main {
                     "🔗 Bot sizga taqdim etgan referral linkni iloji boricha ko'proq do'stlaringizga ulashing. " +
                     "Sizni linkingizdan qo'shilgan har bir ishtirokchiga 1 balldan beriladi. " +
                     "Sovg'alar eng ko'p ball to'plagan ishtirokchiga beriladi. " +
-                    "Konkurs har xafta bo'ladi va xaftaning juma kuni 1-o'rinda turgan ishtirokchimiz g'olib bo'ladi va kanal linkini tashlaydi.\n\n" +
+                    "Konkurs har xafta bo'ladi va xaftaning juma kuni 1-o'rinda turgan ishtirokchimiz g'olib bo'ladi va kanal linkini tashlaydi.\n\n"+
                     "\uD83D\uDCDA  KONKURSIDA ISHTIROK ETING!\n" +
                     "\n" +
                     "\uD83C\uDF81 Mukofotlar:\n" +
@@ -1428,7 +1428,18 @@ public class Main {
         private void handleMushukSoni(long chatId, int soni) throws TelegramApiException {
             System.out.println("handleMushukSoni called: " + soni + " ta, chatId: " + chatId);
             mushukSoniMap.put(chatId, soni);
-            sendPreview(chatId);
+
+            // MUSHUK SONI TANLANGACH, RASM YUBORISH BOSQICHIGA O'TISH
+            stateMap.put(chatId, "await_photo");
+            photosMap.put(chatId, new ArrayList<>());
+
+            String instruction = "📸 Iltimos, mushukning rasmlarini yuboring:\n\n" +
+                    " • Mushukchani chiroyli suratidan jo'nating \n" +
+                    " • 1 dan 3 tagacha bo'lgan surat jo'natishingiz mumkin\n" +
+                    " • yoki 5-10 sekundgacha video jo'ylashingiz mumkin 10 sekuntdan\n\n" +
+                    " • ortiq videoni qabul qilmaymiz ❗️\uFE0F";
+
+            sendText(chatId, instruction);
         }
 
         private void sendMushukSoniSelection(long chatId) throws TelegramApiException {
@@ -1520,7 +1531,9 @@ public class Main {
 
             // NARX faqat "Sotish" va "Vyazka" uchun
             if ("sotish".equals(adType) || "vyazka".equals(adType)) {
-                sb.append("💰 Narx: ").append(priceMap.getOrDefault(chatId, "—")).append(" so'm\n");
+                String valyuta = valyutaMap.getOrDefault(chatId, "so'm");
+                String narxBelgisi = "so'm".equals(valyuta) ? " so'm" : " $";
+                sb.append("💰 Narx: ").append(priceMap.getOrDefault(chatId, "—")).append(narxBelgisi).append("\n");
             }
 
             sb.append("📞 Telefon: ").append(phoneMap.getOrDefault(chatId, "—")).append("\n");
@@ -1543,13 +1556,13 @@ public class Main {
             return sb.toString();
         }
 
-        // ========== TO'LOV KO'RSATMALARI ==========
+        // ========== TO'LOV KO'RSATMALARI - TO'G'RILANGAN ==========
         private void sendPaymentInstructions(long chatId) throws TelegramApiException {
             int mushukSoni = mushukSoniMap.getOrDefault(chatId, 1);
             int narx = 0;
             String mushukText = "";
 
-            System.out.println("To'lov hisoblash: " + mushukSoni + " ta mushuk");
+            System.out.println("To'lov hisoblash: " + mushukSoni + " ta mushuk, chatId: " + chatId);
 
             switch (mushukSoni) {
                 case 1:
@@ -1585,13 +1598,13 @@ public class Main {
             String message = "💳 To'lov ma'lumotlari:\n\n" +
                     "Siz " + mushukText + " uchun to'lov qilishingiz kerak:\n\n" +
                     "💵 To'lov miqdori: " + String.format("%,d", narx) + " so'm\n" +
-                    "💳 Karta raqam: `5614681626280956`\n" +
+                    "💳 Karta raqam: 5614681626280956\n" +
                     "👤 Karta egasi: Xalilov.A\n\n" +
                     "To'lov qilib, chekni rasmini yuboring.";
 
-            System.out.println("To'lov xabari: " + message);
+            System.out.println("To'lov xabari yuborildi: " + chatId);
             sendText(chatId, message);
-            stateMap.put(chatId, "wait_check");
+            stateMap.put(chatId, "wait_check"); // TO'G'RI STATE O'RNATILDI
         }
 
         // ========== DAVOM ETISH TUGMASI ==========
@@ -2047,10 +2060,10 @@ public class Main {
                 btn.setText(allBreeds.get(i));
                 btn.setCallbackData("admin_set_breed_" + allBreeds.get(i).toLowerCase().replace(" ", "_"));
 
-                if (rows.isEmpty() || rows.get(rows.size() - 1).size() >= 2) {
+                if (rows.isEmpty() || rows.get(rows.size()-1).size() >= 2) {
                     rows.add(new ArrayList<>());
                 }
-                rows.get(rows.size() - 1).add(btn);
+                rows.get(rows.size()-1).add(btn);
             }
 
             markup.setKeyboard(rows);
@@ -2193,20 +2206,8 @@ public class Main {
             }
 
             if (!photos.isEmpty()) {
-                List<String> watermarkedPhotos = new ArrayList<>();
-
-                for (String photoId : photos) {
-                    if (watermarkedPhotos.size() < 3) {
-                        String watermarkedFileId = addWatermarkToImage(photoId);
-                        if (watermarkedFileId != null) {
-                            watermarkedPhotos.add(watermarkedFileId);
-                        } else {
-                            watermarkedPhotos.add(photoId);
-                        }
-                    }
-                }
-
-                sendPhotosToChannel(userId, watermarkedPhotos);
+                // WATERMARK O'CHIRILDI - faqat original rasmlar yuboriladi
+                sendPhotosToChannel(userId, photos);
             }
         }
 
@@ -2286,6 +2287,8 @@ public class Main {
             String gender = genderMap.getOrDefault(userId, "");
             String health = healthMap.getOrDefault(userId, "");
             String sterilization = sterilizationMap.getOrDefault(userId, "");
+            String valyuta = valyutaMap.getOrDefault(userId, "so'm");
+            String narxBelgisi = "so'm".equals(valyuta) ? " so'm" : " $";
 
             if ("hadiya".equals(adType)) {
                 caption.append("#HADIYAGA 🎁\n\n");
@@ -2303,7 +2306,7 @@ public class Main {
                 caption.append("📝").append(breed).append(" ").append(age).append(" ").append(gender.toLowerCase())
                         .append(" ").append(sterilization).append(" ").append(health.toLowerCase()).append("\n\n");
                 caption.append("📍 Manzil: ").append(manzil).append("\n");
-                caption.append("💵 Narxi: ").append(priceMap.getOrDefault(userId, "")).append(" so'm\n");
+                caption.append("💵 Narxi: ").append(priceMap.getOrDefault(userId, "")).append(narxBelgisi).append("\n");
                 caption.append("📞 Tel: ").append(phone).append("\n\n");
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
@@ -2316,7 +2319,7 @@ public class Main {
                 caption.append("📝").append(breed).append(" ").append(age).append(" ").append(gender.toLowerCase())
                         .append(" ").append(sterilization).append(" ").append(health.toLowerCase()).append("\n\n");
                 caption.append("📍 Manzil: ").append(manzil).append("\n");
-                caption.append("💵 Narxi: ").append(priceMap.getOrDefault(userId, "")).append(" so'm\n");
+                caption.append("💵 Narxi: ").append(priceMap.getOrDefault(userId, "")).append(narxBelgisi).append("\n");
                 caption.append("📞 Tel: ").append(phone).append("\n\n");
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
@@ -2328,89 +2331,13 @@ public class Main {
             return caption.toString();
         }
 
-        // ========== WATERMARK QO'SHISH ==========
-        private String addWatermarkToImage(String fileId) {
-            try {
-                String fileUrl = getFileUrl(fileId);
-                URL url = new URL(fileUrl);
-                BufferedImage originalImage = ImageIO.read(url);
-
-                BufferedImage watermarkedImage = new BufferedImage(
-                        originalImage.getWidth(),
-                        originalImage.getHeight(),
-                        BufferedImage.TYPE_INT_RGB
-                );
-
-                Graphics2D g2d = watermarkedImage.createGraphics();
-                g2d.drawImage(originalImage, 0, 0, null);
-
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-
-                // "UzbekCats" yozuvini SAQLADIK
-                g2d.setFont(new Font("Arial", Font.BOLD, 25));
-                g2d.setColor(Color.YELLOW);
-
-                String watermarkText = "@UzbekCats";
-                FontMetrics metrics = g2d.getFontMetrics();
-                int textX = 10;
-                int textY = 30;
-
-                g2d.drawString(watermarkText, textX, textY);
-                g2d.dispose();
-
-                File outputFile = new File("watermarked_" + System.currentTimeMillis() + ".jpg");
-                ImageIO.write(watermarkedImage, "jpg", outputFile);
-
-                String newFileId = uploadPhotoToTelegram(outputFile);
-                outputFile.delete();
-
-                return newFileId;
-
-            } catch (Exception e) {
-                System.out.println("❌ Watermark qo'shishda xatolik: " + e.getMessage());
-                return fileId;
-            }
-        }
-
-        private BufferedImage createCircularImage(BufferedImage originalImage, int size) {
-            BufferedImage circularImage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = circularImage.createGraphics();
-
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            Ellipse2D.Double circle = new Ellipse2D.Double(0, 0, size, size);
-            g2d.setClip(circle);
-
-            g2d.drawImage(originalImage, 0, 0, size, size, null);
-
-            g2d.setClip(null);
-            g2d.setStroke(new BasicStroke(1));
-            g2d.setColor(Color.WHITE);
-            g2d.drawOval(0, 0, size - 1, size - 1);
-
-            g2d.dispose();
-            return circularImage;
-        }
+        // ========== WATERMARK QO'SHISH METODLARI O'CHIRILDI ==========
 
         private String getFileUrl(String fileId) throws TelegramApiException {
             org.telegram.telegrambots.meta.api.objects.File file = execute(
                     new org.telegram.telegrambots.meta.api.methods.GetFile(fileId)
             );
             return "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + file.getFilePath();
-        }
-
-        private String uploadPhotoToTelegram(File file) throws TelegramApiException {
-            SendPhoto sendPhoto = new SendPhoto();
-            sendPhoto.setChatId(String.valueOf(ADMIN_ID));
-            sendPhoto.setPhoto(new InputFile(file));
-
-            Message message = execute(sendPhoto);
-            if (message.hasPhoto()) {
-                List<PhotoSize> photos = message.getPhoto();
-                return photos.get(photos.size() - 1).getFileId();
-            }
-            return null;
         }
 
         // ========== STATISTIKANI SAQLASH ==========
@@ -2503,9 +2430,9 @@ public class Main {
                 caption += "📞 Telefon: " + phoneMap.getOrDefault(userId, "—") + "\n\n";
             }
 
-            caption += "[\uD83D\uDC64 Admin](https://t.me/zayd_catlover)  \n\n";
-            caption += "[\uD83C\uDFAC YouTube](https://youtu.be/vdwgSB7_amw)  ";
-            caption += "[\uD83D\uDC8E Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ";
+            caption += "[\uD83D\uDC51 Admin](https://t.me/zayd_catlover) | \n\n";
+            caption += "[\uD83C\uDFAC YouTube](https://youtu.be/vdwgSB7_amw) | ";
+            caption += "[\uD83D\uDC8E Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ";
             caption += "[\uD83D\uDCAC Telegram](https://t.me/uzbek_cats)";
 
             if (userPhotos != null && !userPhotos.isEmpty()) {
@@ -2597,6 +2524,7 @@ public class Main {
                 mushukSoniMap.remove(userId);
                 sterilizationMap.remove(userId);
                 platformaMap.remove(userId);
+                valyutaMap.remove(userId); // Yangi: valyuta ma'lumotlarini ham tozalash
                 stateMap.remove(userId);
                 declineReasonsMap.remove(userId);
 
