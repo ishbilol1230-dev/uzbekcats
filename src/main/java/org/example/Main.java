@@ -999,7 +999,9 @@ public class Main {
         private void sendMainMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
-            msg.setText("🐱 Assalomu alaykum! UzbekCats botiga xush kelibsiz!\n\nQuyidagilardan birini tanlang:");
+            msg.setText("Assalamu alaykum!\n" +
+                    "\n" +
+                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -1587,7 +1589,7 @@ public class Main {
             String message = "💳 To'lov ma'lumotlari:\n\n" +
                     "Siz " + mushukText + " uchun to'lov qilishingiz kerak:\n\n" +
                     "💵 To'lov miqdori: " + String.format("%,d", narx) + " so'm\n" +
-                    "💳 Karta raqam: `5614681626280956`\n" +
+                    "💳 Karta raqam: 5614681626280956\n" +
                     "👤 Karta egasi: Xalilov.A\n\n" +
                     "To'lov qilib, chekni rasmini yuboring.";
 
