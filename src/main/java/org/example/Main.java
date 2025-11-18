@@ -16,7 +16,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-
+//Assalomu alaykum
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -1010,7 +1010,7 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText("Assalamu alaykum!\n" +
                     "\n" +
-                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
+                    "\uD83D\uDE38 Uzbek cats botga xush kelibsiz.:");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
