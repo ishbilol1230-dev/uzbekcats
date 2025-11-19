@@ -41,7 +41,7 @@ public class Main {
         private final long ADMIN_ID = 673018191l;
 
         private final String CHANNEL_USERNAME = "@uzbek_cats";
-
+        //https://t.me/uzbek_cats
         // State va ma'lumotlar
         private final Map<Long, String> stateMap = new ConcurrentHashMap<>();
         private final Map<Long, List<String>> photosMap = new ConcurrentHashMap<>();
@@ -2701,8 +2701,8 @@ public class Main {
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
                 caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-                caption.append("\uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ");
-                caption.append("✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
+                caption.append(" \uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ");
+                caption.append(" ✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
 
             } else if ("vyazka".equals(adType)) {
                 caption.append("#VYAZKAGA 💝\n\n");
