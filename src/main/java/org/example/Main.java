@@ -2311,8 +2311,8 @@ public class Main {
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
                 caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-                caption.append("\uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
-                caption.append("✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
+                caption.append(" \uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
+                caption.append(" ✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
 
             } else {
                 caption.append("#SOTILADI 💰\n\n");
@@ -2324,8 +2324,8 @@ public class Main {
                 caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
                 caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
                 caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-                caption.append("\uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
-                caption.append("✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
+                caption.append(" \uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
+                caption.append(" ✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
             }
 
             return caption.toString();
