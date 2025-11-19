@@ -16,18 +16,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-//Assalomu alaykum
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.net.URL;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
@@ -62,7 +57,7 @@ public class Main {
         private final Map<Long, Integer> mushukSoniMap = new ConcurrentHashMap<>();
         private final Map<Long, String> sterilizationMap = new ConcurrentHashMap<>();
         private final Map<Long, String> platformaMap = new ConcurrentHashMap<>();
-        private final Map<Long, String> valyutaMap = new ConcurrentHashMap<>(); // Yangi: valyuta turi
+        private final Map<Long, String> valyutaMap = new ConcurrentHashMap<>();
         private final AtomicLong adIdCounter = new AtomicLong(1000);
 
         // Admin ma'lumotlari
@@ -73,6 +68,9 @@ public class Main {
         // Statistika ma'lumotlari
         private final Map<String, List<AdRecord>> statisticsMap = new ConcurrentHashMap<>();
         private final Map<Long, String> userUsernameMap = new ConcurrentHashMap<>();
+
+        // Yangi: Foydalanuvchi e'lonlarini saqlash (10 kunlik)
+        private final Map<Long, List<UserAd>> userAdsMap = new ConcurrentHashMap<>();
 
         // Konkurs ma'lumotlari
         private String currentKonkursImageUrl = "https://i.postimg.cc/YvGp1gHt/image.jpg";
@@ -154,6 +152,49 @@ public class Main {
             }
         }
 
+        // Yangi: UserAd klassi
+        class UserAd {
+            long adId;
+            String adType;
+            List<String> photos;
+            String breed;
+            String age;
+            String gender;
+            String health;
+            String sterilization;
+            String manzil;
+            String phone;
+            String price;
+            String valyuta;
+            Date createdDate;
+            boolean isActive;
+
+            public UserAd(long adId, String adType, List<String> photos, String breed,
+                          String age, String gender, String health, String sterilization,
+                          String manzil, String phone, String price, String valyuta) {
+                this.adId = adId;
+                this.adType = adType;
+                this.photos = photos;
+                this.breed = breed;
+                this.age = age;
+                this.gender = gender;
+                this.health = health;
+                this.sterilization = sterilization;
+                this.manzil = manzil;
+                this.phone = phone;
+                this.price = price;
+                this.valyuta = valyuta;
+                this.createdDate = new Date();
+                this.isActive = true;
+            }
+
+            // E'lon eskirganligini tekshirish (10 kun)
+            public boolean isExpired() {
+                long tenDaysInMillis = 10 * 24 * 60 * 60 * 1000L;
+                return new Date().getTime() - createdDate.getTime() > tenDaysInMillis;
+            }
+        }
+
         // Konkurs ishtirokchisi klassi
         static class KonkursParticipant {
             String name;
@@ -209,6 +250,9 @@ public class Main {
             statisticsMap.put("hadiya", new ArrayList<>());
             statisticsMap.put("sotish", new ArrayList<>());
             statisticsMap.put("vyazka", new ArrayList<>());
+
+            // Yangi: Har 24 soatda e'lonlarni tozalash
+            startCleanupTimer();
         }
 
         @Override
@@ -247,7 +291,6 @@ public class Main {
             }
         }
 
-        // ========== REKLAMA FILTR METODLARI ==========
         private void handleChannelPost(Message message) throws TelegramApiException {
             if (message.getChat().getUserName() != null &&
                     message.getChat().getUserName().equalsIgnoreCase(CHANNEL_USERNAME.replace("@", ""))) {
@@ -369,7 +412,6 @@ public class Main {
             return execute(getChat);
         }
 
-        // ========== ASOSIY MESSAGE HANDLER ==========
         private void handleMessage(Message msg) throws Exception {
             long chatId = msg.getChatId();
             String state = stateMap.getOrDefault(chatId, "");
@@ -384,7 +426,20 @@ public class Main {
                 return;
             }
 
-            // ========== ADMIN KONKURS O'ZGARTIRISH ==========
+            // Yangi: Feedback qabul qilish
+            if ("await_feedback".equals(state)) {
+                String feedback = msg.getText().trim();
+
+                // Feedbackni sizga yuborish
+                sendFeedbackToOwner(chatId, feedback);
+
+                sendText(chatId, "✅ Shikoyat/takliflaringiz qabul qilindi! Rahmat.\n\n" +
+                        "Tez orada sizning fikringizni ko'rib chiqamiz.");
+                stateMap.put(chatId, "");
+                return;
+            }
+
+            // Admin konkurs o'zgartirish
             if (chatId == ADMIN_ID) {
                 if ("admin_await_konkurs_image".equals(state)) {
                     if (msg.hasPhoto()) {
@@ -459,7 +514,7 @@ public class Main {
                 return;
             }
 
-            // Narx kiritish - VILOYATDAN KEYIN, TELEFONDAN OLDIN
+            // Narx kiritish
             if ("await_price".equals(state)) {
                 priceMap.put(chatId, msg.getText().trim());
                 stateMap.put(chatId, "await_phone");
@@ -470,7 +525,7 @@ public class Main {
                 return;
             }
 
-            // Chek qabul qilish - TO'G'IRLANAGAN QISMI
+            // Chek qabul qilish
             if ("wait_check".equals(state)) {
                 if (msg.hasPhoto()) {
                     List<PhotoSize> photos = msg.getPhoto();
@@ -496,7 +551,7 @@ public class Main {
                     return;
                 }
 
-                // Telefon raqam kiritish - NARXDAN KEYIN
+                // Telefon raqam kiritish
                 if ("await_phone".equals(state)) {
                     if (!isValidPhoneNumber(text)) {
                         sendText(chatId, "❌ Iltimos, telefon raqamni to'g'ri formatda kiriting:\n\n+998 ** *** ** **\n\nMasalan: +998 90 123 45 67\n\nQayta urinib ko'ring:");
@@ -583,7 +638,6 @@ public class Main {
             }
         }
 
-        // ========== CALLBACK HANDLER ==========
         private void handleCallback(CallbackQuery cb) throws Exception {
             long chatId = cb.getMessage().getChatId();
             String data = cb.getData();
@@ -593,7 +647,56 @@ public class Main {
 
             System.out.println("Callback received: " + data + " from: " + chatId);
 
-            // ========== ADMIN KONKURS O'ZGARTIRISH ==========
+            // Yangi callbacklar
+            if (data.equals("menu_my_orders")) {
+                showMyOrders(chatId);
+                return;
+            }
+
+            if (data.equals("menu_about")) {
+                sendAboutMenu(chatId);
+                return;
+            }
+
+            if (data.equals("about_back")) {
+                sendMainMenu(chatId);
+                return;
+            }
+
+            if (data.equals("about_send_feedback")) {
+                stateMap.put(chatId, "await_feedback");
+                sendText(chatId, "✍️ Iltimos, shikoyat yoki takliflaringizni yozib qoldiring:\n\n" +
+                        "Biz sizning fikrlaringizni qadrlaymiz va botni yaxshilash uchun ishlatamiz.");
+                return;
+            }
+
+            if (data.equals("order_back_main")) {
+                sendMainMenu(chatId);
+                return;
+            }
+
+            if (data.equals("order_back_list")) {
+                showMyOrders(chatId);
+                return;
+            }
+
+            // E'lonni "Berib bo'lindi" qilish
+            if (data.startsWith("order_complete_")) {
+                String adIdStr = data.substring("order_complete_".length());
+                long adId = Long.parseLong(adIdStr);
+                markOrderAsCompleted(chatId, adId);
+                return;
+            }
+
+            // E'lonni ko'rish
+            if (data.startsWith("order_view_")) {
+                String adIdStr = data.substring("order_view_".length());
+                long adId = Long.parseLong(adIdStr);
+                showOrderDetails(chatId, adId);
+                return;
+            }
+
+            // Admin konkurs o'zgartirish
             if (data.equals("admin_konkurs_image")) {
                 if (fromId == ADMIN_ID) {
                     handleAdminKonkursImage(chatId);
@@ -741,7 +844,7 @@ public class Main {
                 // Reklama turi
                 case "adtype_sotish":
                     adTypeMap.put(chatId, "sotish");
-                    sendMushukSoniSelection(chatId); // BIRINCHI MUSHUK SONI TANLASH
+                    sendMushukSoniSelection(chatId);
                     break;
                 case "adtype_hadiya":
                     adTypeMap.put(chatId, "hadiya");
@@ -760,7 +863,7 @@ public class Main {
                     handleContinueProcess(chatId);
                     break;
 
-                // MUSHUK SONI TANLASH - BIRINCHI BOSQICH
+                // MUSHUK SONI TANLASH
                 case "mushuk_1":
                     System.out.println("Mushuk 1 tanlandi: " + chatId);
                     handleMushukSoni(chatId, 1);
@@ -896,14 +999,14 @@ public class Main {
                 // NASL OLISH TANLASH
                 case "sterilization_yes":
                     sterilizationMap.put(chatId, "Nasl olish mumkin");
-                    sendPreview(chatId); // TO'G'RIDAN-TO'G'RI PREVIEWGA O'TISH
+                    sendPreview(chatId);
                     break;
                 case "sterilization_no":
                     sterilizationMap.put(chatId, "Nasl olish mumkin emas");
-                    sendPreview(chatId); // TO'G'RIDAN-TO'G'RI PREVIEWGA O'TISH
+                    sendPreview(chatId);
                     break;
 
-                // Preview tugmalari - TO'G'RILANGAN QISMI
+                // Preview tugmalari
                 case "preview_confirm":
                     String currentAdType = adTypeMap.getOrDefault(chatId, "");
                     System.out.println("Preview confirm: " + chatId + ", Ad Type: " + currentAdType);
@@ -980,6 +1083,298 @@ public class Main {
             }
         }
 
+        // ========== YANGI METODLAR: Mening buyurtmalarim va Bot haqida ==========
+
+        private void sendAboutMenu(long chatId) throws TelegramApiException {
+            SendMessage msg = new SendMessage();
+            msg.setChatId(String.valueOf(chatId));
+            msg.setText("ℹ️ Bot haqida:\n\n" +
+                    "Ushbu bot orqali siz mushuklar haqida e'lon berishingiz mumkin.\n\n" +
+                    "Agar sizda shikoyat yoki takliflar bo'lsa, quyidagi tugmani bosing:");
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            InlineKeyboardButton feedbackBtn = new InlineKeyboardButton();
+            feedbackBtn.setText("✍️ Shikoyat/Taklif yuborish");
+            feedbackBtn.setCallbackData("about_send_feedback");
+            rows.add(Collections.singletonList(feedbackBtn));
+
+            InlineKeyboardButton backBtn = new InlineKeyboardButton();
+            backBtn.setText("↩️ Orqaga");
+            backBtn.setCallbackData("about_back");
+            rows.add(Collections.singletonList(backBtn));
+
+            markup.setKeyboard(rows);
+            msg.setReplyMarkup(markup);
+            execute(msg);
+        }
+
+        private void sendFeedbackToOwner(long userId, String feedback) throws TelegramApiException {
+            String userInfo = userUsernameMap.containsKey(userId) ?
+                    "@" + userUsernameMap.get(userId) : "ID: " + userId;
+
+            String message = "📝 YANGI FEEDBACK\n\n" +
+                    "👤 Foydalanuvchi: " + userInfo + "\n" +
+                    "🆔 User ID: " + userId + "\n" +
+                    "📄 Xabar:\n" + feedback;
+
+            sendText(7038296036L, message);
+        }
+
+        private void cleanupExpiredAds() {
+            System.out.println("🔄 Eski e'lonlarni tozalash...");
+
+            int removedCount = 0;
+            for (List<UserAd> userAds : userAdsMap.values()) {
+                Iterator<UserAd> iterator = userAds.iterator();
+                while (iterator.hasNext()) {
+                    UserAd ad = iterator.next();
+                    if (ad.isExpired()) {
+                        iterator.remove();
+                        removedCount++;
+                    }
+                }
+            }
+
+            if (removedCount > 0) {
+                System.out.println("✅ " + removedCount + " ta eski e'lon o'chirildi");
+            }
+        }
+
+        private void startCleanupTimer() {
+            Timer timer = new Timer();
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    cleanupExpiredAds();
+                }
+            }, 24 * 60 * 60 * 1000, 24 * 60 * 60 * 1000);
+        }
+
+        private void showMyOrders(long chatId) throws TelegramApiException {
+            cleanupExpiredAds();
+
+            List<UserAd> userAds = userAdsMap.getOrDefault(chatId, new ArrayList<>());
+            List<UserAd> activeAds = userAds.stream()
+                    .filter(ad -> ad.isActive && !ad.isExpired())
+                    .collect(Collectors.toList());
+
+            if (activeAds.isEmpty()) {
+                SendMessage msg = new SendMessage();
+                msg.setChatId(String.valueOf(chatId));
+                msg.setText("📭 Sizda hali e'lonlar mavjud emas yoki barcha e'lonlar muddati tugagan.\n\n" +
+                        "Birinchi e'loningizni joylash uchun \"📢 Reklama joylash\" tugmasini bosing.");
+
+                InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+                InlineKeyboardButton backBtn = new InlineKeyboardButton();
+                backBtn.setText("↩️ Asosiy menyu");
+                backBtn.setCallbackData("order_back_main");
+
+                markup.setKeyboard(Collections.singletonList(Collections.singletonList(backBtn)));
+                msg.setReplyMarkup(markup);
+                execute(msg);
+                return;
+            }
+
+            SendMessage msg = new SendMessage();
+            msg.setChatId(String.valueOf(chatId));
+            msg.setText("📋 Mening e'lonlarim (" + activeAds.size() + " ta):\n\n" +
+                    "Quyida sizning barcha e'lonlaringiz ro'yxati. Har bir e'londan pastda \"Berib bo'lindi\" tugmasi bor.\n\n" +
+                    "⚠️ Eslatma: E'lonlar 10 kundan keyin avtomatik o'chib ketadi.");
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            for (UserAd ad : activeAds) {
+                InlineKeyboardButton btn = new InlineKeyboardButton();
+                String adTypeEmoji = "";
+                switch (ad.adType) {
+                    case "sotish": adTypeEmoji = "💰"; break;
+                    case "hadiya": adTypeEmoji = "🎁"; break;
+                    case "vyazka": adTypeEmoji = "💝"; break;
+                }
+
+                long daysLeft = 10 - ((new Date().getTime() - ad.createdDate.getTime()) / (24 * 60 * 60 * 1000));
+                String daysText = daysLeft > 0 ? " (" + daysLeft + " kun qoldi)" : " (Bugun tugaydi)";
+
+                btn.setText(adTypeEmoji + " " + ad.breed + daysText);
+                btn.setCallbackData("order_view_" + ad.adId);
+                rows.add(Collections.singletonList(btn));
+            }
+
+            InlineKeyboardButton backBtn = new InlineKeyboardButton();
+            backBtn.setText("↩️ Asosiy menyu");
+            backBtn.setCallbackData("order_back_main");
+            rows.add(Collections.singletonList(backBtn));
+
+            markup.setKeyboard(rows);
+            msg.setReplyMarkup(markup);
+            execute(msg);
+        }
+
+        private void showOrderDetails(long chatId, long adId) throws TelegramApiException {
+            List<UserAd> userAds = userAdsMap.get(chatId);
+            UserAd targetAd = null;
+
+            if (userAds != null) {
+                for (UserAd ad : userAds) {
+                    if (ad.adId == adId && ad.isActive && !ad.isExpired()) {
+                        targetAd = ad;
+                        break;
+                    }
+                }
+            }
+
+            if (targetAd == null) {
+                sendText(chatId, "❌ E'lon topilmadi yoki muddati tugagan.");
+                showMyOrders(chatId);
+                return;
+            }
+
+            if (targetAd.photos != null && !targetAd.photos.isEmpty()) {
+                SendPhoto photo = new SendPhoto();
+                photo.setChatId(String.valueOf(chatId));
+                photo.setPhoto(new InputFile(targetAd.photos.get(0)));
+                photo.setCaption(buildOrderCaption(targetAd));
+
+                InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+                InlineKeyboardButton completeBtn = new InlineKeyboardButton();
+                completeBtn.setText("✅ Berib bo'lindi");
+                completeBtn.setCallbackData("order_complete_" + adId);
+
+                InlineKeyboardButton backBtn = new InlineKeyboardButton();
+                backBtn.setText("↩️ Orqaga");
+                backBtn.setCallbackData("order_back_list");
+
+                rows.add(Collections.singletonList(completeBtn));
+                rows.add(Collections.singletonList(backBtn));
+
+                markup.setKeyboard(rows);
+                photo.setReplyMarkup(markup);
+                execute(photo);
+            } else {
+                SendMessage msg = new SendMessage();
+                msg.setChatId(String.valueOf(chatId));
+                msg.setText(buildOrderCaption(targetAd));
+
+                InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+                List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+                InlineKeyboardButton completeBtn = new InlineKeyboardButton();
+                completeBtn.setText("✅ Berib bo'lindi");
+                completeBtn.setCallbackData("order_complete_" + adId);
+
+                InlineKeyboardButton backBtn = new InlineKeyboardButton();
+                backBtn.setText("↩️ Orqaga");
+                backBtn.setCallbackData("order_back_list");
+
+                rows.add(Collections.singletonList(completeBtn));
+                rows.add(Collections.singletonList(backBtn));
+
+                markup.setKeyboard(rows);
+                msg.setReplyMarkup(markup);
+                execute(msg);
+            }
+        }
+
+        private String buildOrderCaption(UserAd ad) {
+            StringBuilder sb = new StringBuilder();
+
+            String adTypeText = "";
+            String adTypeEmoji = "";
+            switch (ad.adType) {
+                case "sotish":
+                    adTypeText = "SOTILADI";
+                    adTypeEmoji = "💰";
+                    break;
+                case "hadiya":
+                    adTypeText = "HADIYAGA";
+                    adTypeEmoji = "🎁";
+                    break;
+                case "vyazka":
+                    adTypeText = "VYAZKAGA";
+                    adTypeEmoji = "💝";
+                    break;
+            }
+
+            sb.append(adTypeEmoji).append(" ").append(adTypeText).append("\n\n");
+
+            if (!ad.breed.isEmpty()) sb.append("🐱 Zot: ").append(ad.breed).append("\n");
+            if (!ad.age.isEmpty()) sb.append("🎂 Yosh: ").append(ad.age).append("\n");
+            if (!ad.gender.isEmpty()) sb.append("👤 Jins: ").append(ad.gender).append("\n");
+            if (!ad.health.isEmpty()) sb.append("❤️ Sog'lig'i: ").append(ad.health).append("\n");
+            if (!ad.sterilization.isEmpty()) sb.append("🧬 Nasl olish: ").append(ad.sterilization).append("\n");
+
+            sb.append("📍 Manzil: ").append(ad.manzil).append("\n");
+
+            if (!ad.price.isEmpty()) {
+                String valyutaSign = "so'm".equals(ad.valyuta) ? " so'm" : " $";
+                sb.append("💰 Narx: ").append(ad.price).append(valyutaSign).append("\n");
+            }
+
+            sb.append("📞 Telefon: ").append(ad.phone).append("\n\n");
+
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            sb.append("⏰ Joylangan: ").append(sdf.format(ad.createdDate)).append("\n");
+
+            long daysLeft = 10 - ((new Date().getTime() - ad.createdDate.getTime()) / (24 * 60 * 60 * 1000));
+            if (daysLeft > 0) {
+                sb.append("📅 Muddati: ").append(daysLeft).append(" kun qoldi");
+            } else {
+                sb.append("⚠️ Muddati bugun tugaydi!");
+            }
+
+            return sb.toString();
+        }
+
+        private void markOrderAsCompleted(long chatId, long adId) throws TelegramApiException {
+            List<UserAd> userAds = userAdsMap.get(chatId);
+
+            if (userAds != null) {
+                for (UserAd ad : userAds) {
+                    if (ad.adId == adId) {
+                        ad.isActive = false;
+                        ad.phone = "✅ Berib bo'lindi";
+                        break;
+                    }
+                }
+            }
+
+            sendText(chatId, "✅ E'lon \"Berib bo'lindi\" deb belgilandi!\n\n" +
+                    "Telefon raqam olib tashlandi va \"Berib bo'lindi\" deb yozildi.");
+
+            showMyOrders(chatId);
+        }
+
+        private void saveUserAd(long userId) {
+            if (!userAdsMap.containsKey(userId)) {
+                userAdsMap.put(userId, new ArrayList<>());
+            }
+
+            long adId = System.currentTimeMillis();
+
+            UserAd userAd = new UserAd(
+                    adId,
+                    adTypeMap.getOrDefault(userId, ""),
+                    new ArrayList<>(photosMap.getOrDefault(userId, new ArrayList<>())),
+                    breedMap.getOrDefault(userId, ""),
+                    ageMap.getOrDefault(userId, ""),
+                    genderMap.getOrDefault(userId, ""),
+                    healthMap.getOrDefault(userId, ""),
+                    sterilizationMap.getOrDefault(userId, ""),
+                    manzilMap.getOrDefault(userId, ""),
+                    phoneMap.getOrDefault(userId, ""),
+                    priceMap.getOrDefault(userId, ""),
+                    valyutaMap.getOrDefault(userId, "so'm")
+            );
+
+            userAdsMap.get(userId).add(userAd);
+            System.out.println("✅ E'lon saqlandi. User: " + userId + ", E'lonlar soni: " + userAdsMap.get(userId).size());
+        }
+
         // ========== VALYUTA TANLASH ==========
         private void sendValyutaSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
@@ -1010,7 +1405,7 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText("Assalamu alaykum!\n" +
                     "\n" +
-                    "\uD83D\uDE38 Uzbek cats botga xush kelibsiz.:");
+                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -1019,6 +1414,11 @@ public class Main {
             b1.setText("📢 Reklama joylash");
             b1.setCallbackData("menu_reklama");
             rows.add(Collections.singletonList(b1));
+
+            InlineKeyboardButton bOrders = new InlineKeyboardButton();
+            bOrders.setText("📋 Mening buyurtmalarim");
+            bOrders.setCallbackData("menu_my_orders");
+            rows.add(Collections.singletonList(bOrders));
 
             InlineKeyboardButton b2 = new InlineKeyboardButton();
             b2.setText("🏆 Konkurs");
@@ -1029,6 +1429,11 @@ public class Main {
             b3.setText("👤 Admin bilan bog'lanish");
             b3.setCallbackData("menu_admin");
             rows.add(Collections.singletonList(b3));
+
+            InlineKeyboardButton bAbout = new InlineKeyboardButton();
+            bAbout.setText("ℹ️ Bot haqida");
+            bAbout.setCallbackData("menu_about");
+            rows.add(Collections.singletonList(bAbout));
 
             if (chatId == ADMIN_ID) {
                 InlineKeyboardButton adminBtn = new InlineKeyboardButton();
@@ -1429,7 +1834,6 @@ public class Main {
             System.out.println("handleMushukSoni called: " + soni + " ta, chatId: " + chatId);
             mushukSoniMap.put(chatId, soni);
 
-            // MUSHUK SONI TANLANGACH, RASM YUBORISH BOSQICHIGA O'TISH
             stateMap.put(chatId, "await_photo");
             photosMap.put(chatId, new ArrayList<>());
 
@@ -1529,7 +1933,6 @@ public class Main {
 
             sb.append("📍 Manzil: ").append(manzilMap.getOrDefault(chatId, "—")).append("\n");
 
-            // NARX faqat "Sotish" va "Vyazka" uchun
             if ("sotish".equals(adType) || "vyazka".equals(adType)) {
                 String valyuta = valyutaMap.getOrDefault(chatId, "so'm");
                 String narxBelgisi = "so'm".equals(valyuta) ? " so'm" : " $";
@@ -1556,7 +1959,7 @@ public class Main {
             return sb.toString();
         }
 
-        // ========== TO'LOV KO'RSATMALARI - TO'G'RILANGAN ==========
+        // ========== TO'LOV KO'RSATMALARI ==========
         private void sendPaymentInstructions(long chatId) throws TelegramApiException {
             int mushukSoni = mushukSoniMap.getOrDefault(chatId, 1);
             int narx = 0;
@@ -1604,7 +2007,7 @@ public class Main {
 
             System.out.println("To'lov xabari yuborildi: " + chatId);
             sendText(chatId, message);
-            stateMap.put(chatId, "wait_check"); // TO'G'RI STATE O'RNATILDI
+            stateMap.put(chatId, "wait_check");
         }
 
         // ========== DAVOM ETISH TUGMASI ==========
@@ -2185,7 +2588,8 @@ public class Main {
                 return;
             }
 
-            // Statistika saqlash
+            saveUserAd(userId);
+
             String adType = adTypeMap.getOrDefault(userId, "");
             saveStatistics(userId, adType);
 
@@ -2206,7 +2610,6 @@ public class Main {
             }
 
             if (!photos.isEmpty()) {
-                // WATERMARK O'CHIRILDI - faqat original rasmlar yuboriladi
                 sendPhotosToChannel(userId, photos);
             }
         }
@@ -2330,8 +2733,6 @@ public class Main {
 
             return caption.toString();
         }
-
-        // ========== WATERMARK QO'SHISH METODLARI O'CHIRILDI ==========
 
         private String getFileUrl(String fileId) throws TelegramApiException {
             org.telegram.telegrambots.meta.api.objects.File file = execute(
@@ -2510,7 +2911,6 @@ public class Main {
             try {
                 System.out.println("🗑️ Foydalanuvchi ma'lumotlari o'chirilmoqda: " + userId);
 
-                // 1. FOYDALANUVCHI MA'LUMOTLARINI TOZALASH
                 photosMap.remove(userId);
                 manzilMap.remove(userId);
                 phoneMap.remove(userId);
@@ -2524,11 +2924,10 @@ public class Main {
                 mushukSoniMap.remove(userId);
                 sterilizationMap.remove(userId);
                 platformaMap.remove(userId);
-                valyutaMap.remove(userId); // Yangi: valyuta ma'lumotlarini ham tozalash
+                valyutaMap.remove(userId);
                 stateMap.remove(userId);
                 declineReasonsMap.remove(userId);
 
-                // 2. ✅ ADMIN PANELIDAGI XABARLARNI O'CHIRISH
                 deleteAdminPanelMessages(userId);
 
                 System.out.println("✅ Barcha ma'lumotlar va admin xabarlari o'chirildi: " + userId);
@@ -2538,19 +2937,16 @@ public class Main {
             }
         }
 
-        // ✅ ADMIN PANELIDAGI XABARLARNI O'CHIRISH
         private void deleteAdminPanelMessages(long userId) {
             try {
                 List<Integer> messagesToDelete = new ArrayList<>();
 
-                // Admin xabarlarini topish
                 for (Map.Entry<Integer, Long> entry : adminMessageIds.entrySet()) {
                     if (entry.getValue() == userId) {
                         messagesToDelete.add(entry.getKey());
                     }
                 }
 
-                // Xabarlarni o'chirish
                 for (Integer messageId : messagesToDelete) {
                     try {
                         DeleteMessage deleteMsg = new DeleteMessage();
@@ -2584,4 +2980,4 @@ public class Main {
             execute(msg);
         }
     }
-}
+}//673018191
