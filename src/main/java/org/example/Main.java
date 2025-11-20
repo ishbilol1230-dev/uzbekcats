@@ -34,14 +34,13 @@ public class Main {
             e.printStackTrace();
         }
     }
-
     public static class MyBot extends TelegramLongPollingBot {
         private static final String BOT_USERNAME = "@Uzbek_cat_bot";
         private static final String BOT_TOKEN = "8577521489:AAGbp2MvcMXZlnK-KbDdmPm8WArYlJ4PxWk";
         private final long ADMIN_ID = 673018191l;
 
         private final String CHANNEL_USERNAME = "@uzbek_cats";
-        //https://t.me/uzbek_cats
+
         // State va ma'lumotlar
         private final Map<Long, String> stateMap = new ConcurrentHashMap<>();
         private final Map<Long, List<String>> photosMap = new ConcurrentHashMap<>();
@@ -58,6 +57,10 @@ public class Main {
         private final Map<Long, String> sterilizationMap = new ConcurrentHashMap<>();
         private final Map<Long, String> platformaMap = new ConcurrentHashMap<>();
         private final Map<Long, String> valyutaMap = new ConcurrentHashMap<>();
+
+        // YANGI: Foydalanuvchining tasdiqlanmagan reklamasi borligini tekshirish
+        private final Map<Long, Boolean> userHasPendingAdMap = new ConcurrentHashMap<>();
+
         private final AtomicLong adIdCounter = new AtomicLong(1000);
 
         // Admin ma'lumotlari
@@ -1048,6 +1051,9 @@ public class Main {
                             sendText(uid, "✅ E'loningiz kanalga joylandi!");
                             deleteAdminMessages(uid);
                             sendText(ADMIN_ID, "✅ E'lon tasdiqlandi va kanalga joylandi. Xabarlar tozalandi.");
+
+                            // YANGI: Tasdiqlanganda holatni o'chirish
+                            userHasPendingAdMap.put(uid, false);
                         }
                     } else if (data.startsWith("decline_")) {
                         if (fromId == ADMIN_ID) {
@@ -1055,6 +1061,9 @@ public class Main {
                             long uid = Long.parseLong(uidStr);
                             stateMap.put(ADMIN_ID, "admin_decline_reason_" + uid);
                             sendText(ADMIN_ID, "📝 Foydalanuvchiga yuborish uchun rad etish sababini yozing:");
+
+                            // YANGI: Rad etilganda ham holatni o'chirish
+                            userHasPendingAdMap.put(uid, false);
                         }
                     } else if (data.startsWith("edit_")) {
                         if (fromId == ADMIN_ID) {
@@ -1580,6 +1589,13 @@ public class Main {
 
         // ========== REKLAMA TURI TANLASH ==========
         private void sendAdTypeSelection(long chatId) throws TelegramApiException {
+            // YANGI: Foydalanuvchining tasdiqlanmagan reklamasi borligini tekshirish
+            if (userHasPendingAdMap.getOrDefault(chatId, false)) {
+                sendText(chatId, "⏳ Iltimos, birinchi reklamangiz admin tomonidan tasdiqlangandan keyin ikkinchi reklamani joylang!\n\n" +
+                        "Hozir sizda tasdiqlanmagan reklama mavjud. Admin tez orada uni ko'rib chiqadi.");
+                return;
+            }
+
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
             msg.setText("🎯 Quyidagilardan birini tanlang:");
@@ -1623,6 +1639,15 @@ public class Main {
         }
 
         private void startAdProcess(long chatId) throws TelegramApiException {
+            // YANGI: Holatni tekshirish
+            if (userHasPendingAdMap.getOrDefault(chatId, false)) {
+                sendText(chatId, "⏳ Iltimos, birinchi reklamangiz admin tomonidan tasdiqlangandan keyin ikkinchi reklamani joylang!");
+                return;
+            }
+
+            // YANGI: Holatni o'rnatish
+            userHasPendingAdMap.put(chatId, true);
+
             stateMap.put(chatId, "await_photo");
             photosMap.put(chatId, new ArrayList<>());
 
@@ -1833,6 +1858,15 @@ public class Main {
         private void handleMushukSoni(long chatId, int soni) throws TelegramApiException {
             System.out.println("handleMushukSoni called: " + soni + " ta, chatId: " + chatId);
             mushukSoniMap.put(chatId, soni);
+
+            // YANGI: Holatni tekshirish
+            if (userHasPendingAdMap.getOrDefault(chatId, false)) {
+                sendText(chatId, "⏳ Iltimos, birinchi reklamangiz admin tomonidan tasdiqlangandan keyin ikkinchi reklamani joylang!");
+                return;
+            }
+
+            // YANGI: Holatni o'rnatish
+            userHasPendingAdMap.put(chatId, true);
 
             stateMap.put(chatId, "await_photo");
             photosMap.put(chatId, new ArrayList<>());
@@ -2443,6 +2477,9 @@ public class Main {
 
             deleteAdminMessages(userId);
             adminEditUserIdMap.remove(adminId);
+
+            // YANGI: Tasdiqlanganda holatni o'chirish
+            userHasPendingAdMap.put(userId, false);
         }
 
         private void sendAdminBreedSelection(long adminId) throws TelegramApiException {
@@ -2612,6 +2649,9 @@ public class Main {
             if (!photos.isEmpty()) {
                 sendPhotosToChannel(userId, photos);
             }
+
+            // YANGI: Tasdiqlanganda holatni o'chirish
+            userHasPendingAdMap.put(userId, false);
         }
 
         private void sendVideoToChannel(long userId, String videoFileId, List<String> photos) throws TelegramApiException {
@@ -2907,6 +2947,7 @@ public class Main {
         }
 
         // ========== ADMIN XABARLARNI O'CHIRISH ==========
+// ========== ADMIN XABARLARNI O'CHIRISH ==========
         private void deleteAdminMessages(long userId) {
             try {
                 System.out.println("🗑️ Foydalanuvchi ma'lumotlari o'chirilmoqda: " + userId);
@@ -2980,4 +3021,4 @@ public class Main {
             execute(msg);
         }
     }
-}//673018191
+}
