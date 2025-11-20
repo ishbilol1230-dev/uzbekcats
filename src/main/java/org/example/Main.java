@@ -57,7 +57,7 @@ public class Main {
         private final Map<Long, String> sterilizationMap = new ConcurrentHashMap<>();
         private final Map<Long, String> platformaMap = new ConcurrentHashMap<>();
         private final Map<Long, String> valyutaMap = new ConcurrentHashMap<>();
-
+//case "preview_confirm":
         // YANGI: Foydalanuvchining tasdiqlanmagan reklamasi borligini tekshirish
         private final Map<Long, Boolean> userHasPendingAdMap = new ConcurrentHashMap<>();
 
@@ -1017,6 +1017,13 @@ public class Main {
                     if ("sotish".equals(currentAdType) || "vyazka".equals(currentAdType)) {
                         System.out.println("Sending payment instructions for: " + chatId);
                         sendPaymentInstructions(chatId);
+
+                        // YANGI: To'lov talab qilinadigan reklamalarni admin tasdiqlamasdan avtomatik joylash
+                        // Agar siz to'lov talab qilmasdan avtomatik joylamoqchi bo'lsangiz, quyidagi qatorni oching:
+                        // postToChannel(chatId);
+                        // sendText(chatId, "✅ E'loningiz kanalga joylandi!");
+                        // userHasPendingAdMap.put(chatId, false);
+
                     } else {
                         System.out.println("Direct admin notification for: " + chatId);
                         sendText(chatId, "✅ Ma'lumotlaringiz qabul qilindi! Admin tekshirib kanalga joylaydi.");
@@ -1414,7 +1421,7 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText("Assalamu alaykum!\n" +
                     "\n" +
-                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
+                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -3019,6 +3026,6 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText(text);
             execute(msg);
-        }
+        }// kelibsiz
     }
 }
