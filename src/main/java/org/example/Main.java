@@ -1422,7 +1422,7 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText("Assalamu alaykum!\n" +
                     "\n" +
-                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
+                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
