@@ -34,11 +34,11 @@ public class Main {
             e.printStackTrace();
         }
     }
+
     public static class MyBot extends TelegramLongPollingBot {
         private static final String BOT_USERNAME = "@Uzbek_cat_bot";
         private static final String BOT_TOKEN = "8577521489:AAGbp2MvcMXZlnK-KbDdmPm8WArYlJ4PxWk";
         private final long ADMIN_ID = 673018191l;
-
         private final String CHANNEL_USERNAME = "@uzbek_cats";
 
         // State va ma'lumotlar
@@ -57,7 +57,7 @@ public class Main {
         private final Map<Long, String> sterilizationMap = new ConcurrentHashMap<>();
         private final Map<Long, String> platformaMap = new ConcurrentHashMap<>();
         private final Map<Long, String> valyutaMap = new ConcurrentHashMap<>();
-//case "preview_confirm":
+
         // YANGI: Foydalanuvchining tasdiqlanmagan reklamasi borligini tekshirish
         private final Map<Long, Boolean> userHasPendingAdMap = new ConcurrentHashMap<>();
 
@@ -535,6 +535,10 @@ public class Main {
                     String fileId = photos.get(photos.size()-1).getFileId();
                     checkMap.put(chatId, fileId);
                     sendText(chatId, "✅ Chek qabul qilindi. Admin tekshiradi.");
+
+                    // YANGI: Chek yuborilganda holatni o'rnatamiz
+                    userHasPendingAdMap.put(chatId, true);
+
                     notifyAdmin(chatId);
                     stateMap.put(chatId, "waiting_admin");
                 } else {
@@ -1017,16 +1021,13 @@ public class Main {
                     if ("sotish".equals(currentAdType) || "vyazka".equals(currentAdType)) {
                         System.out.println("Sending payment instructions for: " + chatId);
                         sendPaymentInstructions(chatId);
-
-                        // YANGI: To'lov talab qilinadigan reklamalarni admin tasdiqlamasdan avtomatik joylash
-                        // Agar siz to'lov talab qilmasdan avtomatik joylamoqchi bo'lsangiz, quyidagi qatorni oching:
-                        // postToChannel(chatId);
-                        // sendText(chatId, "✅ E'loningiz kanalga joylandi!");
-                        // userHasPendingAdMap.put(chatId, false);
-
                     } else {
                         System.out.println("Direct admin notification for: " + chatId);
                         sendText(chatId, "✅ Ma'lumotlaringiz qabul qilindi! Admin tekshirib kanalga joylaydi.");
+
+                        // YANGI: Foydalanuvchi reklama berib bo'lganda holatni o'rnatamiz
+                        userHasPendingAdMap.put(chatId, true);
+
                         notifyAdmin(chatId);
                         stateMap.put(chatId, "waiting_admin");
                     }
@@ -1421,7 +1422,7 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText("Assalamu alaykum!\n" +
                     "\n" +
-                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.");
+                    "\uD83D\uDC08\u200D⬛\uFE0F Uzbek cats botga xush kelibsiz.:");
 
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -1646,15 +1647,6 @@ public class Main {
         }
 
         private void startAdProcess(long chatId) throws TelegramApiException {
-            // YANGI: Holatni tekshirish
-            if (userHasPendingAdMap.getOrDefault(chatId, false)) {
-                sendText(chatId, "⏳ Iltimos, birinchi reklamangiz admin tomonidan tasdiqlangandan keyin ikkinchi reklamani joylang!");
-                return;
-            }
-
-            // YANGI: Holatni o'rnatish
-            userHasPendingAdMap.put(chatId, true);
-
             stateMap.put(chatId, "await_photo");
             photosMap.put(chatId, new ArrayList<>());
 
@@ -1865,15 +1857,6 @@ public class Main {
         private void handleMushukSoni(long chatId, int soni) throws TelegramApiException {
             System.out.println("handleMushukSoni called: " + soni + " ta, chatId: " + chatId);
             mushukSoniMap.put(chatId, soni);
-
-            // YANGI: Holatni tekshirish
-            if (userHasPendingAdMap.getOrDefault(chatId, false)) {
-                sendText(chatId, "⏳ Iltimos, birinchi reklamangiz admin tomonidan tasdiqlangandan keyin ikkinchi reklamani joylang!");
-                return;
-            }
-
-            // YANGI: Holatni o'rnatish
-            userHasPendingAdMap.put(chatId, true);
 
             stateMap.put(chatId, "await_photo");
             photosMap.put(chatId, new ArrayList<>());
@@ -2954,7 +2937,6 @@ public class Main {
         }
 
         // ========== ADMIN XABARLARNI O'CHIRISH ==========
-// ========== ADMIN XABARLARNI O'CHIRISH ==========
         private void deleteAdminMessages(long userId) {
             try {
                 System.out.println("🗑️ Foydalanuvchi ma'lumotlari o'chirilmoqda: " + userId);
@@ -3026,6 +3008,6 @@ public class Main {
             msg.setChatId(String.valueOf(chatId));
             msg.setText(text);
             execute(msg);
-        }// kelibsiz
+        }
     }
 }
