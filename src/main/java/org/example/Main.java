@@ -83,11 +83,16 @@ public class Main {
         private final Set<String> bannedWords = Set.of(
                 "mushuk sotiladi",
                 "mushuk bor",
-                "reklama",
                 "sotaman",
-                "sotiladi"
+                "sotiladi",
+                "bor",
+                "sotuvda",
+                "arzonga mushuk",
+                "hadiyaga",
+                "mendayam bor",
+                "atrofida bor"
         );
-        private final String WARNING_MESSAGE = "❌ Iltimos, reklama tarqatmang!";
+        private final String WARNING_MESSAGE = "❌ Iltimos, reklama tarqatmang!  ";
 
         // Viloyatlar ro'yxati
         private final List<String> viloyatlar = Arrays.asList(
@@ -102,7 +107,7 @@ public class Main {
                 "6 oylik", "7 oylik", "8 oylik", "9 oylik",
                 "10 oylik", "11 oylik", "+1 yosh"
         );
-
+//  👤 Foydalanuvchi ID: 5720087773
         // Zotlar sahifalari
         private final Map<Integer, List<String>> breedPages = new HashMap<>();
         private final List<String> allBreeds = new ArrayList<>();
@@ -396,7 +401,7 @@ public class Main {
                 SendMessage warning = new SendMessage();
                 warning.setChatId(chatId.toString());
                 warning.setText(WARNING_MESSAGE + "\n\n👤 Foydalanuvchi ID: " + userId +
-                        "\n📝 Sabab: Reklama tarqatish taqiqlanadi!");
+                        "\n\uD83D\uDD12 Ask holda sizni bloklashga majbur bo’lamiz.\n\nReklama berish uchun adminga murojat qiling:  \uD83D\uDCE5[Admin](https://t.me/zayd_catlover)");
                 execute(warning);
             } catch (TelegramApiException e) {
                 System.out.println("Ogohlantirish yuborishda xatolik: " + e.getMessage());
