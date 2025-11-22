@@ -277,6 +277,7 @@ public class Main {
                     return;
                 }
 
+
                 if (update.hasMessage()) {
                     if (update.getMessage().getFrom() != null) {
                         long userId = update.getMessage().getFrom().getId();
@@ -378,6 +379,7 @@ public class Main {
             return false;
         }
 
+
         private void deleteMessage(Long chatId, Integer messageId) {
             try {
                 DeleteMessage deleteMessage = new DeleteMessage();
@@ -457,6 +459,7 @@ public class Main {
                     }
                     return;
                 }
+
 
                 if ("admin_await_konkurs_text".equals(state)) {
                     if (msg.hasText()) {
@@ -2835,6 +2838,47 @@ public class Main {
                 msg.setReplyMarkup(markup);
 
                 execute(msg);
+            }
+        }
+        private void handleNewChatMembers(Message message) throws TelegramApiException {
+            try {
+                List<User> newMembers = message.getNewChatMembers();
+                if (newMembers != null && !newMembers.isEmpty()) {
+                    String chatId = message.getChatId().toString();
+
+                    System.out.println("Yangi a'zolar qo'shildi: " + newMembers.size() + " ta");
+
+                    for (User user : newMembers) {
+                        if (!user.getIsBot()) {
+                            sendWelcomeMessage(chatId, user);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Xatolik yangi a'zolarni qabul qilishda: " + e.getMessage());
+            }
+        }
+
+        private void sendWelcomeMessage(String chatId, User user) throws TelegramApiException {
+            try {
+                SendMessage welcome = new SendMessage();
+                welcome.setChatId(chatId);
+
+                String userName = user.getUserName();
+                String firstName = user.getFirstName();
+                String lastName = user.getLastName();
+
+                String displayName = firstName + (lastName != null ? " " + lastName : "");
+                String mention = userName != null ? "@" + userName : displayName;
+
+                welcome.setText("Assalomu alaykum " + mention + "! 🐱\n" +
+                        "UzbekCats kanaliga xush kelibsiz!\n\n" +
+                        "Marhamat, yangi postlarni kuzatib boring va faol bo'ling! 😊");
+
+                execute(welcome);
+                System.out.println("✅ Xush kelibsiz xabari yuborildi: " + displayName);
+            } catch (TelegramApiException e) {
+                System.out.println("❌ Xabar yuborishda xato: " + e.getMessage());
             }
         }
 
