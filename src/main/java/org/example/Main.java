@@ -90,8 +90,20 @@ public class Main {
                 "arzonga mushuk",
                 "hadiyaga",
                 "mendayam bor",
-                "atrofida bor"
-        );
+                "atrofida bor",
+                "sotman",
+                "kimga mushuk kerak",
+                "Mandayam bor",
+                "beramiz",
+                "beraman",
+                "сотаман",
+                "мушук бор",
+                "бор",
+                "бера",
+                "hadyaga",
+                "кимга мушук керак",
+                "мушук сотилади"
+              );
         private final String WARNING_MESSAGE = "❌ Iltimos, reklama tarqatmang!  ";
 
         // Viloyatlar ro'yxati
@@ -119,7 +131,7 @@ public class Main {
                 new KonkursParticipant("Muslimbek", "@Muslimaxon_93", 155, "https://t.me/Muslimaxon_93"),
                 new KonkursParticipant("ishtopchiuz | admin", "@premium_oberam1z", 136, "https://t.me/premium_oberam1z"),
                 new KonkursParticipant("DarkAce", "@Dubai_070", 125, "https://t.me/Dubai_070"),
-                new KonkursParticipant(".....", "", 107, ""),
+                new KonkursParticipant(".", "@khyabu", 114, "https://t.me/khyabu"),
                 new KonkursParticipant("𝓓𝓻_𝓫𝓸𝓫𝓸𝔁𝓸𝓷𝓸𝓿𝓷𝓪🦋", "@dr_sadullayevna", 100, "https://t.me/dr_sadullayevna"),
                 new KonkursParticipant("🫀", "@top_banana_9", 91, "https://t.me/top_banana_9"),
                 new KonkursParticipant("Ozodbek", "@Yuldowev_Ozodbek", 88, "https://t.me/Yuldowev_Ozodbek"),
