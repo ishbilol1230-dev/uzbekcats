@@ -623,7 +623,7 @@ public class Main {
                         }
                     } else {
                         sendText(chatId, "✅ " + currentCount + "-rasm qabul qilindi. " +
-                                (3 - currentCount) + " ta rasm yuborishingiz mumkin yoki 'Davom etish' tugmasini bosing.");
+                                (3 - currentCount) + " ta rasm yuborishingiz mumkin yoki 'Davom etish' tugmasini bosing iltimos faqat rasm yuboring.");
                         if (!state.startsWith("yordam_")) {
                             sendContinueButton(chatId);
                         }
@@ -778,11 +778,13 @@ public class Main {
                 stateMap.put(chatId, "await_photo");
                 photosMap.put(chatId, new ArrayList<>());
 
-                String instruction = "📸 Iltimos, mushukning rasmlarini yuboring:\n\n" +
+                String instruction = "📸 Iltimos qoydani uqing va mushukning rasmlarini yuboring:\n\n" +
                         " • Mushukchani chiroyli suratidan jo'nating \n" +
-                        " • 1 dan 3 tagacha bo'lgan surat jo'natishingiz mumkin\n" +
-                        " • yoki 5-10 sekundgacha video jo'ylashingiz mumkin 10 sekuntdan\n\n" +
-                        " • ortiq videoni qabul qilmaymiz ❗️\uFE0F";
+                        " • 1 dan 3 tagacha bo'lgan rasmlarni jo'natishingiz mumkin\n" +
+                        " • yoki 5-10 sekundgacha video jo'ylashingiz mumkin 10 sekuntdan\n" +
+                        " • 10 sonyadan ortiq videoni qabul qilmaymiz ❗️\uFE0F\n"+
+                        " • iltimos rasm yoki vdyo ikkovidan birini yuboring\n\n"+
+                        " • Agar ikkoviniyam yuborsanggiz qabul qilmaymiza❗️\uFE0F";
 
                 sendText(chatId, instruction);
                 return;
