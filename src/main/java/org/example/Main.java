@@ -399,7 +399,8 @@ public class Main {
                 SendMessage warning = new SendMessage();
                 warning.setChatId(chatId.toString());
                 warning.setText(WARNING_MESSAGE + "\n\n👤 Foydalanuvchi ID: " + userId +
-                        "\n📝 Sabab: Reklama tarqatish taqiqlanadi!");
+                        "\n📝 Ask holda sizni bloklashga majbur bo’lamiz.\n\n "+
+                        "Reklama berish uchun adminga murojat qiling:  \uD83D\uDCE5Admin(https://t.me/zayd_catlover)");
                 execute(warning);
             } catch (TelegramApiException e) {
                 System.out.println("Ogohlantirish yuborishda xatolik: " + e.getMessage());
