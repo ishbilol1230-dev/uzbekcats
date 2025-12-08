@@ -119,28 +119,7 @@ public class Main {
         private final Map<Integer, List<String>> breedPages = new HashMap<>();
         private final List<String> allBreeds = new ArrayList<>();
 
-        private final List<KonkursParticipant> konkursParticipants = Arrays.asList(
-                new KonkursParticipant("Muhammadiy", "@Muhammadi_1808", 202, "https://t.me/Muhammadi_1808"),
-                new KonkursParticipant("Abdulloh Sheraliyev", "@Abdulloo789", 193, "https://t.me/Abdulloo789"),
-                new KonkursParticipant("Muslimbek", "@Muslimaxon_93", 155, "https://t.me/Muslimaxon_93"),
-                new KonkursParticipant("ishtopchiuz | admin", "@premium_oberam1z", 136, "https://t.me/premium_oberam1z"),
-                new KonkursParticipant("DarkAce", "@Dubai_070", 125, "https://t.me/Dubai_070"),
-                new KonkursParticipant(".....", "", 107, ""),
-                new KonkursParticipant("𝓓𝓻_𝓫𝓸𝓫𝓸𝔁𝓸𝓷𝓸𝓿𝓷𝓪🦋", "@dr_sadullayevna", 100, "https://t.me/dr_sadullayevna"),
-                new KonkursParticipant("🫀", "@top_banana_9", 91, "https://t.me/top_banana_9"),
-                new KonkursParticipant("Ozodbek", "@Yuldowev_Ozodbek", 88, "https://t.me/Yuldowev_Ozodbek"),
-                new KonkursParticipant("Марьям", "@OlloxBor", 82, "https://t.me/OlloxBor"),
-                new KonkursParticipant("𝐔𝐌𝐈𝐃⦁🇲🇪⦁𝐒𝐎𝐕𝐄𝐓𝐒𝐊𝐈", "@ham1dullayevic_1", 81, "https://t.me/ham1dullayevic_1"),
-                new KonkursParticipant("O'chirilgan hisob", "@yunusovarobiya_2283", 78, "https://t.me/yunusovarobiya_2283"),
-                new KonkursParticipant("flirtyhh*", "@koxinur7713", 73, "https://t.me/koxinur7713"),
-                new KonkursParticipant("...", "", 72, ""),
-                new KonkursParticipant("N_A_A", "@Nilufar_Azimovaa", 66, "https://t.me/Nilufar_Azimovaa"),
-                new KonkursParticipant("Александр", "", 53, ""),
-                new KonkursParticipant("😽", "@mushuk_savdoqarshi", 51, "https://t.me/mushuk_savdoqarshi"),
-                new KonkursParticipant("معمورجان", "", 51, ""),
-                new KonkursParticipant("Mr. Akhror", "@Murodilla_iskandarov", 44, "https://t.me/Murodilla_iskandarov"),
-                new KonkursParticipant("𝕀ℝ𝕆𝔻𝔸", "@Iroda0620", 39, "https://t.me/Iroda0620")
-        );
+        private List<KonkursParticipant> konkursParticipants = new ArrayList<>();
 
         private final AtomicLong adIdCounter = new AtomicLong(1000);
 
@@ -258,10 +237,37 @@ public class Main {
             statisticsMap.put("sotish", new ArrayList<>());
             statisticsMap.put("vyazka", new ArrayList<>());
 
+            initializeKonkursParticipants();
+
             startCleanupTimer();
 
             System.out.println("🔧 Texnik Sozlovchi ID: " + TECHNICAL_ADMIN_ID);
             System.out.println("👨‍💼 Asosiy Admin ID: " + ADMIN_ID);
+        }
+
+        private void initializeKonkursParticipants() {
+            konkursParticipants = new ArrayList<>(Arrays.asList(
+                    new KonkursParticipant("Muhammadiy", "@Muhammadi_1808", 234, "https://t.me/Muhammadi_1808"),
+                    new KonkursParticipant("Abdulloh Sheraliyev", "@Abdulloo789", 212, "https://t.me/Abdulloo789"),
+                    new KonkursParticipant("Muslimbek", "@Muslimaxon_93", 175, "https://t.me/Muslimaxon_93"),
+                    new KonkursParticipant("ishtopchiuz | admin", "@premium_oberam1z", 146, "https://t.me/premium_oberam1z"),
+                    new KonkursParticipant("DarkAce", "@Dubai_070", 135, "https://t.me/Dubai_070"),
+                    new KonkursParticipant(".....", "", 134, ""),
+                    new KonkursParticipant("𝓓𝓻_𝓫𝓸𝓫𝓸𝔁𝓸𝓷𝓸𝓿𝓷𝓪🦋", "@dr_sadullayevna", 115, "https://t.me/dr_sadullayevna"),
+                    new KonkursParticipant("🫀", "@top_banana_9", 99, "https://t.me/top_banana_9"),
+                    new KonkursParticipant("Ozodbek", "@Yuldowev_Ozodbek", 93, "https://t.me/Yuldowev_Ozodbek"),
+                    new KonkursParticipant("Марьям", "@OlloxBor", 89, "https://t.me/OlloxBor"),
+                    new KonkursParticipant("𝐔𝐌𝐈𝐃⦁🇲🇪⦁𝐒𝐎𝐕𝐄𝐓𝐒𝐊𝐈", "@ham1dullayevic_1", 87, "https://t.me/ham1dullayevic_1"),
+                    new KonkursParticipant("O'chirilgan hisob", "@yunusovarobiya_2283", 79, "https://t.me/yunusovarobiya_2283"),
+                    new KonkursParticipant("flirtyhh*", "@koxinur7713", 78, "https://t.me/koxinur7713"),
+                    new KonkursParticipant("...", "", 77, ""),
+                    new KonkursParticipant("N_A_A", "@Nilufar_Azimovaa", 71, "https://t.me/Nilufar_Azimovaa"),
+                    new KonkursParticipant("Александр", "", 68, ""),
+                    new KonkursParticipant("😽", "@mushuk_savdoqarshi", 65, "https://t.me/mushuk_savdoqarshi"),
+                    new KonkursParticipant("معمورجان", "", 56, ""),
+                    new KonkursParticipant("Mr. Akhror", "@Murodilla_iskandarov", 55, "https://t.me/Murodilla_iskandarov"),
+                    new KonkursParticipant("𝕀ℝ𝕆𝔻𝔸", "@Iroda0620", 49, "https://t.me/Iroda0620")
+            ));
         }
 
         @Override
@@ -399,7 +405,7 @@ public class Main {
                 SendMessage warning = new SendMessage();
                 warning.setChatId(chatId.toString());
                 warning.setText(WARNING_MESSAGE + "\n\n👤 Foydalanuvchi ID: " + userId +
-                        "\n📝 Ask holda sizni bloklashga majbur bo’lamiz.\n\n "+
+                        "\n📝 Ask holda sizni bloklashga majbur bo'lamiz.\n\n "+
                         "Reklama berish uchun adminga murojat qiling:  \uD83D\uDCE5Admin(https://t.me/zayd_catlover)");
                 execute(warning);
             } catch (TelegramApiException e) {
@@ -1032,6 +1038,17 @@ public class Main {
                     sendAdminPanel(chatId);
                     break;
 
+                case "admin_rating_manage":
+                    if (ADMIN_IDS.contains(fromId)) {
+                        handleAdminRatingManagement(chatId);
+                    }
+                    break;
+                case "rating_reset_all":
+                    if (ADMIN_IDS.contains(fromId)) {
+                        handleResetAllRatings(chatId);
+                    }
+                    break;
+
                 case "about_back":
                     sendMainMenu(chatId);
                     break;
@@ -1269,9 +1286,126 @@ public class Main {
                             sendText(uid, "❌ So'rovingiz tasdiqlanmadi. Admin bilan bog'laning.");
                             sendText(fromId, "❌ Yordam so'rovi rad etildi.");
                         }
+                    } else if (data.startsWith("rating_reset_")) {
+                        if (ADMIN_IDS.contains(fromId)) {
+                            int participantIndex = Integer.parseInt(data.substring("rating_reset_".length()));
+                            resetParticipantRating(chatId, participantIndex);
+                        }
                     }
                     break;
             }
+        }
+
+        private void handleAdminRatingManagement(long chatId) throws TelegramApiException {
+            SendMessage msg = new SendMessage();
+            msg.setChatId(String.valueOf(chatId));
+            msg.setText("🏆 Reyting boshqarish:\n\nTop " + konkursParticipants.size() + " ishtirokchi ro'yxati. Ballarini 0 qilmoqchi bo'lgan ishtirokchini tanlang:");
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            for (int i = 0; i < Math.min(20, konkursParticipants.size()); i++) {
+                KonkursParticipant participant = konkursParticipants.get(i);
+                InlineKeyboardButton btn = new InlineKeyboardButton();
+                String medal = "";
+                if (i == 0) medal = "🥇 ";
+                else if (i == 1) medal = "🥈 ";
+                else if (i == 2) medal = "🥉 ";
+                else medal = "👤 ";
+
+                btn.setText(medal + (i+1) + ". " + participant.name + " - " + participant.score + " ball");
+                btn.setCallbackData("rating_reset_" + i);
+                rows.add(Collections.singletonList(btn));
+            }
+
+            InlineKeyboardButton resetAllBtn = new InlineKeyboardButton();
+            resetAllBtn.setText("♻️ Hammasini 0 qilish");
+            resetAllBtn.setCallbackData("rating_reset_all");
+            rows.add(Collections.singletonList(resetAllBtn));
+
+            InlineKeyboardButton backBtn = new InlineKeyboardButton();
+            backBtn.setText("↩️ Orqaga");
+            backBtn.setCallbackData("admin_back");
+            rows.add(Collections.singletonList(backBtn));
+
+            markup.setKeyboard(rows);
+            msg.setReplyMarkup(markup);
+            execute(msg);
+        }
+
+        private void resetParticipantRating(long adminId, int participantIndex) throws TelegramApiException {
+            if (participantIndex >= 0 && participantIndex < konkursParticipants.size()) {
+                KonkursParticipant participant = konkursParticipants.get(participantIndex);
+                String oldName = participant.name;
+                int oldScore = participant.score;
+
+                // 1. Ballarni 0 qilish
+                participant.score = 0;
+
+                // 2. Oxirgi o'ringa tushirish
+                KonkursParticipant removed = konkursParticipants.remove(participantIndex);
+                konkursParticipants.add(removed);
+
+                // 3. Qolgan ishtirokchilarni tartiblash (ballari bo'yicha)
+                Collections.sort(konkursParticipants, (p1, p2) -> Integer.compare(p2.score, p1.score));
+
+                // 4. 20-chi o'rindagi ishtirokchini almashtirish
+                if (konkursParticipants.size() >= 20) {
+                    // Oxirgi (20-chi) ishtirokchini olib tashlash
+                    konkursParticipants.remove(konkursParticipants.size() - 1);
+
+                    // Yangi ishtirokchi qo'shish
+                    KonkursParticipant newParticipant = new KonkursParticipant(
+                            "Alhamdulillah",
+                            "@It_project_2026",
+                            35,
+                            "https://t.me/It_project_2026"
+                    );
+                    konkursParticipants.add(newParticipant);
+                }
+
+                sendText(adminId, "✅ " + oldName + " ishtirokchining ballari 0 qilindi!\n\n" +
+                        "Eski ball: " + oldScore + " 🎯\n" +
+                        "Yangi ball: 0 🎯\n" +
+                        "Yangi o'rin: " + konkursParticipants.size() + "-o'rin\n\n" +
+                        "⚠️ 20-chi o'rindagi ishtirokchi @It_project_2026 bilan almashtirildi (35 ball)");
+
+                // Yangilangan ro'yxatni ko'rsatish
+                handleAdminRatingManagement(adminId);
+            } else {
+                sendText(adminId, "❌ Ishtirokchi topilmadi!");
+            }
+        }
+
+        private void handleResetAllRatings(long adminId) throws TelegramApiException {
+            // Barcha ishtirokchilarni ballarini 0 qilish
+            for (KonkursParticipant participant : konkursParticipants) {
+                participant.score = 0;
+            }
+
+            // Alhamdulillah'ni 1-o'ringa qo'yish
+            KonkursParticipant alhamdulillah = new KonkursParticipant(
+                    "Alhamdulillah",
+                    "@It_project_2026",
+                    35,
+                    "https://t.me/It_project_2026"
+            );
+
+            // 1-o'rindagi ishtirokchini almashtirish
+            if (!konkursParticipants.isEmpty()) {
+                konkursParticipants.set(0, alhamdulillah);
+            }
+
+            // Qolgan ishtirokchilarni tartiblash (yangi 35 balli birinchi bo'ladi)
+            Collections.sort(konkursParticipants, (p1, p2) -> Integer.compare(p2.score, p1.score));
+
+            sendText(adminId, "✅ Barcha ishtirokchilarning ballari 0 qilindi!\n\n" +
+                    "Jami ishtirokchilar: " + konkursParticipants.size() + " ta\n" +
+                    "Barcha ballar: 0 🎯\n" +
+                    "1-o'rin: Alhamdulillah (@It_project_2026) - 35 ball");
+
+            // Yangilangan ro'yxatni ko'rsatish
+            handleAdminRatingManagement(adminId);
         }
 
         private void sendMainMenu(long chatId) throws TelegramApiException {
@@ -2132,6 +2266,11 @@ public class Main {
             konkursBtn.setText("🏆 Konkursni o'zgartirish");
             konkursBtn.setCallbackData("admin_konkurs_change");
             rows.add(Collections.singletonList(konkursBtn));
+
+            InlineKeyboardButton ratingManageBtn = new InlineKeyboardButton();
+            ratingManageBtn.setText("🏆 Reyting boshqarish");
+            ratingManageBtn.setCallbackData("admin_rating_manage");
+            rows.add(Collections.singletonList(ratingManageBtn));
 
             if (chatId == TECHNICAL_ADMIN_ID) {
                 InlineKeyboardButton adBtn = new InlineKeyboardButton();
