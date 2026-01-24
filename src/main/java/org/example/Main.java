@@ -2309,7 +2309,7 @@ public class Main {
 
                 String buttonText = adTypeEmoji + " Reklama #" + ad.adNumber;
                 if (!ad.isActive) {
-                    buttonText += " (" + (ad.adType.equals("hadiya") ? "Berib bo'lindik" : "Sotildi") + ")";
+                    buttonText += " (" + (ad.adType.equals("hadiya") ? "Berib bo'ldik" : "Sotildi") + ")";
                 }
 
                 InlineKeyboardButton btn = new InlineKeyboardButton();
@@ -2478,7 +2478,7 @@ public class Main {
             if (ad.isActive) {
                 sb.append("📞 *Telefon:* ").append(ad.phone).append("\n\n");
             } else {
-                String statusText = "hadiya".equals(ad.adType) ? "✅ Berib bo'lindik" : "💰 Sotildi";
+                String statusText = "hadiya".equals(ad.adType) ? "✅ Berib bo'ldik" : "💰 Sotildi";
                 sb.append("📞 *Holat:* ").append(statusText).append("\n\n");
             }
 
@@ -2503,23 +2503,23 @@ public class Main {
                 for (UserAd ad : userAds) {
                     if (ad.adId == adId) {
                         ad.isActive = false;
-                        ad.phone = "✅ Berib bo'lindik";
+                        ad.phone = "✅ Berib bo'ldik";
 
                         // Kanaldagi reklamani yangilash
-                        updateChannelAd(chatId, adId, "berib_bo'lindik");
+                        updateChannelAd(chatId, adId, "berib_bo'ldik");
 
                         // Adminlarga xabar yuborish
                         String adminMessage = "📢 REKLAMA YAKUNLANDI\n\n" +
                                 "Foydalanuvchi: #" + userNumberMap.getOrDefault(chatId, 0) + "\n" +
                                 "Reklama #: " + ad.adNumber + "\n" +
-                                "Status: ✅ Berib bo'lindik";
+                                "Status: ✅ Berib bo'ldik";
 
                         sendText(ADMIN_ID, adminMessage);
                         if (chatId != TECHNICAL_ADMIN_ID) {
                             sendText(TECHNICAL_ADMIN_ID, adminMessage);
                         }
 
-                        sendText(chatId, "✅ Reklama \"Berib bo'lindi\" deb belgilandi!");
+                        sendText(chatId, "✅ Reklama \"Berib bo'ldi\" deb belgilandi!");
 
                         showIndividualAd(chatId, adId);
                         break;
@@ -2626,7 +2626,7 @@ public class Main {
                 caption.append("📝 Mushukcha yaxshi insonlarga tekinga sovg'a qilinadi.\n\n");
                 caption.append("📍 Manzil: ").append(ad.manzil).append("\n");
                 if ("berib_bo'lindi".equals(status)) {
-                    caption.append("✅ BERIB BO'LDI\n\n");
+                    caption.append("✅ BERIB BO'LDIK \n\n");
                 } else {
                     caption.append("📞 Nomer: ").append(ad.phone).append("\n\n");
                 }
