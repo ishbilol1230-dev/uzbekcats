@@ -50,6 +50,7 @@ public class Main {
         private final long TECHNICAL_ADMIN_ID = 7038296036L;
         private final Set<Long> ADMIN_IDS = Set.of(ADMIN_ID, TECHNICAL_ADMIN_ID);
         private final String CHANNEL_USERNAME = "@uzbek_cats";
+        private final String CHANNEL_ID = "@uzbek_cats"; // Kanal ID
 
         // Bot holati (on/off)
         private boolean botEnabled = true;
@@ -344,8 +345,6 @@ public class Main {
             String state = stateMap.getOrDefault(chatId, "");
             String mediaType = mediaTypeMap.getOrDefault(chatId, "");
 
-            System.out.println("DEBUG: handleMessage chatId=" + chatId + ", state=" + state + ", text=" + (msg.hasText() ? msg.getText() : "no text"));
-
             if (msg.hasText() && msg.getText().startsWith("/start")) {
                 String text = msg.getText();
                 if (text.contains(" ")) {
@@ -354,7 +353,6 @@ public class Main {
                         String referralCode = parts[1];
                         if (codeToUserMap.containsKey(referralCode)) {
                             Long referrerId = codeToUserMap.get(referralCode);
-                            // Referralni saqlab qo'yamiz, to'liq ro'yxatdan o'tgandan keyin ball beramiz
                             referralMap.put(chatId, referrerId);
                             sendText(chatId, "🎉 Siz referral orqali kirdingiz! Ro'yxatdan o'tgandan keyin ball olasiz.");
                         }
@@ -425,9 +423,7 @@ public class Main {
                 }
             }
 
-            // ADMINLAR UCHUN
             if (ADMIN_IDS.contains(chatId)) {
-                // 1. Foydalanuvchi boshqarish uchun
                 if ("tech_block_user".equals(state)) {
                     if (msg.hasText()) {
                         String text = msg.getText().trim();
@@ -602,14 +598,12 @@ public class Main {
                 }
             }
 
-            // Foydalanuvchi tomonidan yozilgan zot
             if ("await_custom_breed".equals(state)) {
                 breedMap.put(chatId, msg.getText().trim());
                 sendAgeSelection(chatId);
                 return;
             }
 
-            // Narx kiritish
             if ("await_price".equals(state)) {
                 priceMap.put(chatId, msg.getText().trim());
                 stateMap.put(chatId, "await_phone");
@@ -620,7 +614,6 @@ public class Main {
                 return;
             }
 
-            // To'lov cheki
             if ("wait_check".equals(state)) {
                 if (msg.hasPhoto()) {
                     List<PhotoSize> photos = msg.getPhoto();
@@ -638,7 +631,6 @@ public class Main {
                 return;
             }
 
-            // Matn xabarlarini qayta ishlash
             if (msg.hasText()) {
                 String text = msg.getText().trim();
 
@@ -676,7 +668,6 @@ public class Main {
                 return;
             }
 
-            // RASM QABUL QILISH
             if (msg.hasPhoto() && "await_photo".equals(state) && "photo".equals(mediaType)) {
                 List<PhotoSize> photos = msg.getPhoto();
                 if (photos == null || photos.isEmpty()) {
@@ -685,7 +676,6 @@ public class Main {
                 }
 
                 String fileId = photos.get(photos.size()-1).getFileId();
-                System.out.println("DEBUG: Rasm qabul qilindi. File ID: " + fileId);
 
                 if (!photosMap.containsKey(chatId)) {
                     photosMap.put(chatId, new ArrayList<>());
@@ -710,7 +700,6 @@ public class Main {
                 return;
             }
 
-            // VIDEO QABUL QILISH
             if (msg.hasVideo() && "await_photo".equals(state) && "video".equals(mediaType)) {
                 Video video = msg.getVideo();
 
@@ -737,7 +726,6 @@ public class Main {
                 return;
             }
 
-            // Yordam uchun rasm qabul qilish
             if (msg.hasPhoto() && state.startsWith("yordam_") && state.endsWith("_photo")) {
                 List<PhotoSize> photos = msg.getPhoto();
                 String fileId = photos.get(photos.size()-1).getFileId();
@@ -764,7 +752,6 @@ public class Main {
                 return;
             }
 
-            // Yordam uchun video qabul qilish
             if (msg.hasVideo() && state.startsWith("yordam_") && state.endsWith("_photo")) {
                 Video video = msg.getVideo();
 
@@ -796,9 +783,7 @@ public class Main {
             long fromId = cb.getFrom().getId();
 
             execute(new AnswerCallbackQuery(cb.getId()));
-            System.out.println("Callback received: " + data + " from: " + chatId);
 
-            // E'lonlarni ko'rish va boshqarish
             if (data.startsWith("view_ad_")) {
                 long adId = Long.parseLong(data.substring("view_ad_".length()));
                 showIndividualAd(chatId, adId);
@@ -835,7 +820,6 @@ public class Main {
                 return;
             }
 
-            // Asosiy menyu navigatsiyasi
             if (data.equals("menu_main")) {
                 sendMainMenu(chatId);
                 return;
@@ -888,7 +872,6 @@ public class Main {
                 return;
             }
 
-            // Admin bilan bog'lanish
             if (data.equals("menu_admin")) {
                 sendAdminContactMenu(chatId);
                 return;
@@ -920,7 +903,6 @@ public class Main {
                 return;
             }
 
-            // Admin panel navigatsiyasi
             if (data.equals("admin_panel")) {
                 sendAdminPanel(chatId);
                 return;
@@ -931,7 +913,6 @@ public class Main {
                 return;
             }
 
-            // Teknik admin foydalanuvchi boshqarish
             if (data.equals("tech_user_management")) {
                 sendTechAdminUserManagement(chatId);
                 return;
@@ -974,7 +955,6 @@ public class Main {
                 return;
             }
 
-            // Konkurs boshqarish
             if (data.equals("admin_konkurs_change")) {
                 if (ADMIN_IDS.contains(fromId)) {
                     sendKonkursChangeMenu(chatId);
@@ -1003,7 +983,6 @@ public class Main {
                 return;
             }
 
-            // Reklama paneli
             if (data.equals("ad_panel")) {
                 if (fromId == TECHNICAL_ADMIN_ID) {
                     sendAdPanel(chatId);
@@ -1056,7 +1035,6 @@ public class Main {
                 return;
             }
 
-            // Media turini tanlash
             if (data.equals("media_photo")) {
                 mediaTypeMap.put(chatId, "photo");
                 stateMap.put(chatId, "await_photo");
@@ -1093,7 +1071,6 @@ public class Main {
                 return;
             }
 
-            // Breed tanlash
             if (data.startsWith("admin_set_breed_")) {
                 handleAdminSetBreed(chatId, data);
                 return;
@@ -1122,7 +1099,6 @@ public class Main {
                 return;
             }
 
-            // Platforma tanlash
             if (data.startsWith("platforma_")) {
                 String platforma = data.substring("platforma_".length());
                 platformaMap.put(chatId, platforma);
@@ -1146,12 +1122,11 @@ public class Main {
                             " • Mushukchani chiroyli suratidan jo'nating \n" +
                             " • 1 dan 3 tagacha bo'lgan surat jo'natishingiz mumkin\n" +
                             " • yoki 5-10 sekundgacha video jo'ylashingiz mumkin 10 sekuntdan\n\n" +
-                            " • ortiq videoni qabul qilmaymiz ❗️\uFE0F");
+                            " • ortiq videoni qabul qilmaymiz ❗️");
                 }
                 return;
             }
 
-            // Valyuta tanlash
             if (data.equals("valyuta_som") || data.equals("valyuta_dollar")) {
                 String valyuta = data.equals("valyuta_som") ? "so'm" : "$";
                 valyutaMap.put(chatId, valyuta);
@@ -1164,7 +1139,6 @@ public class Main {
                 return;
             }
 
-            // Asosiy callback'lar
             switch (data) {
                 case "menu_narx":
                     sendPriceList(chatId);
@@ -1247,10 +1221,6 @@ public class Main {
                     if (ADMIN_IDS.contains(fromId)) {
                         handleResetAllRatings(chatId);
                     }
-                    break;
-
-                case "about_back":
-                    sendMainMenu(chatId);
                     break;
 
                 case "about_what_can":
@@ -1384,7 +1354,6 @@ public class Main {
                     }
                     break;
 
-                // Yosh tanlash
                 case "age_1_oylik": ageMap.put(chatId, "1 oylik"); sendHealthSelection(chatId); break;
                 case "age_2_oylik": ageMap.put(chatId, "2 oylik"); sendHealthSelection(chatId); break;
                 case "age_3_oylik": ageMap.put(chatId, "3 oylik"); sendHealthSelection(chatId); break;
@@ -1467,7 +1436,6 @@ public class Main {
                     sendAdminPanel(chatId);
                     break;
 
-                // Texnik admin uchun Konkurs takliflar
                 case "tech_konkurs_takliflar":
                     sendKonkursTakliflar(chatId);
                     break;
@@ -1507,11 +1475,18 @@ public class Main {
 
                             sendText(TECHNICAL_ADMIN_ID, messageToTechAdmin);
 
-                            postToChannel(uid, adNumber);
-                            sendText(uid, "✅ E'loningiz kanalga joylandi!");
-                            deleteAdminMessages(uid);
-                            sendText(fromId, "✅ E'lon tasdiqlandi va kanalga joylandi. Xabarlar tozalandi.");
-                            userHasPendingAdMap.put(uid, false);
+                            // KANALGA POST YUBORISH
+                            boolean success = postToChannel(uid, adNumber);
+
+                            if (success) {
+                                sendText(uid, "✅ E'loningiz kanalga joylandi!");
+                                deleteAdminMessages(uid);
+                                sendText(fromId, "✅ E'lon tasdiqlandi va kanalga joylandi. Xabarlar tozalandi.");
+                                userHasPendingAdMap.put(uid, false);
+                            } else {
+                                sendText(uid, "❌ E'loningizni kanalga joylashda xatolik yuz berdi. Admin bilan bog'laning.");
+                                sendText(fromId, "❌ E'lonni kanalga joylashda xatolik!");
+                            }
                         }
                     } else if (data.startsWith("decline_")) {
                         if (ADMIN_IDS.contains(fromId)) {
@@ -1588,9 +1563,300 @@ public class Main {
             }
         }
 
-        // ==================== YANGI FUNKSIYALAR ====================
+        // ==================== YANGI TUZATILGAN METODLAR ====================
 
-        // 1. Teknik admin uchun foydalanuvchi boshqarish
+        /**
+         * KANALGA POST YUBORISH - TUZATILGAN VERSIYA
+         * Bu metod endi boolean qaytaradi - muvaffaqiyatli yoki yo'q
+         */
+        private boolean postToChannel(long userId, int adNumber) {
+            try {
+                List<String> userPhotos = photosMap.get(userId);
+                if (userPhotos == null || userPhotos.isEmpty()) {
+                    System.out.println("❌ Rasmlar topilmadi! userId: " + userId);
+                    sendText(ADMIN_ID, "❌ Xatolik: Foydalanuvchi #" + userNumberMap.getOrDefault(userId, 0) + " rasmlari topilmadi!");
+                    return false;
+                }
+
+                // E'lonni saqlash
+                saveUserAd(userId, adNumber);
+
+                // Statistikani saqlash
+                String adType = adTypeMap.getOrDefault(userId, "");
+                saveStatistics(userId, adType, adNumber);
+
+                // Media turlarini ajratish
+                List<String> photos = new ArrayList<>();
+                String videoFileId = null;
+
+                for (String media : userPhotos) {
+                    if (media.startsWith("video:")) {
+                        videoFileId = media.substring(6);
+                    } else {
+                        photos.add(media);
+                    }
+                }
+
+                // Kanal caption yaratish
+                String caption = buildChannelCaption(userId, adType,
+                        manzilMap.getOrDefault(userId, ""),
+                        phoneMap.getOrDefault(userId, ""), adNumber);
+
+                Integer channelMessageId = null;
+
+                // 1. Video + rasmlar birga bo'lsa
+                if (videoFileId != null && !photos.isEmpty()) {
+                    try {
+                        // Avval videoni yuboramiz
+                        SendVideo videoMsg = new SendVideo();
+                        videoMsg.setChatId(CHANNEL_ID);
+                        videoMsg.setVideo(new InputFile(videoFileId));
+                        videoMsg.setCaption(caption);
+                        videoMsg.setParseMode("Markdown");
+
+                        Message sentVideo = execute(videoMsg);
+                        channelMessageId = sentVideo.getMessageId();
+
+                        // Keyin rasmlarni alohida yuboramiz
+                        for (String photo : photos) {
+                            try {
+                                SendPhoto photoMsg = new SendPhoto();
+                                photoMsg.setChatId(CHANNEL_ID);
+                                photoMsg.setPhoto(new InputFile(photo));
+                                execute(photoMsg);
+                                Thread.sleep(500); // 0.5 soniya kutish
+                            } catch (Exception e) {
+                                System.out.println("❌ Rasm yuborishda xatolik: " + e.getMessage());
+                            }
+                        }
+
+                        System.out.println("✅ Video + " + photos.size() + " rasm kanalga yuborildi");
+
+                    } catch (Exception e) {
+                        System.out.println("❌ Video+rasm yuborishda xatolik: " + e.getMessage());
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+                // 2. Faqat video bo'lsa
+                else if (videoFileId != null) {
+                    try {
+                        SendVideo videoMsg = new SendVideo();
+                        videoMsg.setChatId(CHANNEL_ID);
+                        videoMsg.setVideo(new InputFile(videoFileId));
+                        videoMsg.setCaption(caption);
+                        videoMsg.setParseMode("Markdown");
+
+                        Message sentVideo = execute(videoMsg);
+                        channelMessageId = sentVideo.getMessageId();
+
+                        System.out.println("✅ Video kanalga yuborildi");
+
+                    } catch (Exception e) {
+                        System.out.println("❌ Video yuborishda xatolik: " + e.getMessage());
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+                // 3. Faqat rasmlar bo'lsa
+                else if (!photos.isEmpty()) {
+                    try {
+                        if (photos.size() >= 2) {
+                            // Media gruppa yuborish
+                            SendMediaGroup mediaGroup = new SendMediaGroup();
+                            mediaGroup.setChatId(CHANNEL_ID);
+
+                            List<InputMedia> mediaList = new ArrayList<>();
+
+                            // Birinchi rasmga caption qo'shamiz
+                            InputMediaPhoto firstMedia = new InputMediaPhoto();
+                            firstMedia.setMedia(photos.get(0));
+                            firstMedia.setCaption(caption);
+                            firstMedia.setParseMode("Markdown");
+                            mediaList.add(firstMedia);
+
+                            // Qolgan rasmlarni qo'shamiz
+                            for (int i = 1; i < photos.size(); i++) {
+                                InputMediaPhoto media = new InputMediaPhoto();
+                                media.setMedia(photos.get(i));
+                                mediaList.add(media);
+                            }
+
+                            mediaGroup.setMedias(mediaList);
+
+                            List<Message> messages = execute(mediaGroup);
+                            if (messages != null && !messages.isEmpty()) {
+                                channelMessageId = messages.get(0).getMessageId();
+                            }
+
+                            System.out.println("✅ " + photos.size() + " ta rasm kanalga yuborildi (media group)");
+
+                        } else {
+                            // Bitta rasm
+                            SendPhoto photoMsg = new SendPhoto();
+                            photoMsg.setChatId(CHANNEL_ID);
+                            photoMsg.setPhoto(new InputFile(photos.get(0)));
+                            photoMsg.setCaption(caption);
+                            photoMsg.setParseMode("Markdown");
+
+                            Message sentPhoto = execute(photoMsg);
+                            channelMessageId = sentPhoto.getMessageId();
+
+                            System.out.println("✅ 1 ta rasm kanalga yuborildi");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("❌ Rasm yuborishda xatolik: " + e.getMessage());
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+
+                // Kanal message ID ni saqlash
+                if (channelMessageId != null) {
+                    List<UserAd> userAds = userAdsMap.get(userId);
+                    if (userAds != null && !userAds.isEmpty()) {
+                        UserAd lastAd = userAds.get(userAds.size() - 1);
+                        lastAd.channelMessageId = channelMessageId;
+                        System.out.println("✅ Kanaldagi post ID saqlandi: " + channelMessageId);
+
+                        // Texnik adminga xabar
+                        sendText(TECHNICAL_ADMIN_ID, "✅ #" + userNumberMap.getOrDefault(userId, 0) +
+                                " foydalanuvchining reklamasi kanalga joylandi!\n" +
+                                "🔗 https://t.me/" + CHANNEL_USERNAME.replace("@", "") + "/" + channelMessageId);
+                    }
+                }
+
+                userHasPendingAdMap.put(userId, false);
+                return true;
+
+            } catch (Exception e) {
+                System.out.println("❌ postToChannel metodida xatolik: " + e.getMessage());
+                e.printStackTrace();
+
+                // Xatolik haqida adminlarga xabar
+                try {
+                    sendText(ADMIN_ID, "❌ Kanalga post yuborishda xatolik!\n" +
+                            "Foydalanuvchi: #" + userNumberMap.getOrDefault(userId, 0) + "\n" +
+                            "Xatolik: " + e.getMessage());
+                    sendText(TECHNICAL_ADMIN_ID, "❌ Kanalga post yuborishda xatolik!\n" +
+                            "Foydalanuvchi: #" + userNumberMap.getOrDefault(userId, 0) + "\n" +
+                            "Xatolik: " + e.getMessage());
+                } catch (Exception ex) {
+                    System.out.println("Adminlarga xabar yuborishda xatolik: " + ex.getMessage());
+                }
+
+                return false;
+            }
+        }
+
+        /**
+         * KANAL CAPTION YARATISH - TUZATILGAN VERSIYA
+         */
+        private String buildChannelCaption(long userId, String adType, String manzil, String phone, int adNumber) {
+            try {
+                StringBuilder caption = new StringBuilder();
+
+                String breed = breedMap.getOrDefault(userId, "");
+                String age = ageMap.getOrDefault(userId, "");
+                String gender = genderMap.getOrDefault(userId, "");
+                String health = healthMap.getOrDefault(userId, "");
+                String sterilization = sterilizationMap.getOrDefault(userId, "");
+                String valyuta = valyutaMap.getOrDefault(userId, "so'm");
+                String narxBelgisi = "so'm".equals(valyuta) ? " so'm" : " $";
+                String price = priceMap.getOrDefault(userId, "");
+
+                int userNumber = userNumberMap.getOrDefault(userId, 0);
+                String username = userUsernameMap.getOrDefault(userId, "");
+
+                if ("hadiya".equals(adType)) {
+                    caption.append("#HADIYA 🎁\n\n");
+                    caption.append("📝 Mushukcha yaxshi insonlarga tekinga sovg'a qilinadi. Iltimos mushukni sotadigan yoki chidolmay ko'chaga tashlab ketadigan bo'lsangiz olmang! Allohdan qo'rqing\n\n");
+                    caption.append("🏠 Manzil: ").append(manzil).append("\n");
+                    caption.append("📞 Telefon: ").append(phone).append("\n\n");
+                    caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
+                    caption.append("📢 [Reklama berish uchun](https://t.me/").append(BOT_USERNAME.replace("@", "")).append("?start=reklama)\n\n");
+                    caption.append("[YouTube](https://youtu.be/vdwgSB7_amw) | ");
+                    caption.append("[Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
+                    caption.append("[Telegram](https://t.me/uzbek_cats)");
+
+                } else if ("vyazka".equals(adType)) {
+                    caption.append("#VYAZKA 💝\n\n");
+                    caption.append("📝 ").append(breed).append(" | ").append(age).append(" | ").append(gender)
+                            .append(" | ").append(sterilization).append("\n\n");
+                    caption.append("🏠 Manzil: ").append(manzil).append("\n");
+                    caption.append("📞 Telefon: ").append(phone).append("\n\n");
+                    caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
+                    caption.append("📢 [Reklama berish uchun](https://t.me/").append(BOT_USERNAME.replace("@", "")).append("?start=reklama)\n\n");
+                    caption.append("[YouTube](https://youtu.be/vdwgSB7_amw) | ");
+                    caption.append("[Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
+                    caption.append("[Telegram](https://t.me/uzbek_cats)");
+
+                } else {
+                    caption.append("#SOTILADI 💰\n\n");
+                    caption.append("📝 ").append(breed).append(" | ").append(age).append(" | ").append(gender)
+                            .append(" | ").append(sterilization).append(" | ").append(health).append("\n\n");
+                    caption.append("📍 Manzil: ").append(manzil).append("\n");
+
+                    if (price != null && !price.isEmpty()) {
+                        caption.append("💵 Narxi: ").append(price).append(narxBelgisi).append("\n");
+                    }
+
+                    caption.append("📞 Tel: ").append(phone).append("\n\n");
+                    caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
+                    caption.append("📢 [Reklama berish uchun](https://t.me/").append(BOT_USERNAME.replace("@", "")).append("?start=reklama)\n\n");
+                    caption.append("[YouTube](https://youtu.be/vdwgSB7_amw) | ");
+                    caption.append("[Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
+                    caption.append("[Telegram](https://t.me/uzbek_cats)");
+                }
+
+                return caption.toString();
+
+            } catch (Exception e) {
+                System.out.println("❌ buildChannelCaption xatolik: " + e.getMessage());
+                return "#XATOLIK\n\nIltimos, admin bilan bog'laning.";
+            }
+        }
+
+        /**
+         * MEDIA GRUPPA YUBORISH - YANGI QO'SHIMCHA METOD
+         */
+        private boolean sendMediaGroupToChannel(List<String> photos, String caption) {
+            try {
+                if (photos == null || photos.isEmpty()) {
+                    return false;
+                }
+
+                SendMediaGroup mediaGroup = new SendMediaGroup();
+                mediaGroup.setChatId(CHANNEL_ID);
+
+                List<InputMedia> mediaList = new ArrayList<>();
+
+                for (int i = 0; i < photos.size(); i++) {
+                    InputMediaPhoto media = new InputMediaPhoto();
+                    media.setMedia(photos.get(i));
+
+                    // Faqat birinchi rasmga caption qo'shamiz
+                    if (i == 0) {
+                        media.setCaption(caption);
+                        media.setParseMode("Markdown");
+                    }
+
+                    mediaList.add(media);
+                }
+
+                mediaGroup.setMedias(mediaList);
+
+                List<Message> messages = execute(mediaGroup);
+                return messages != null && !messages.isEmpty();
+
+            } catch (Exception e) {
+                System.out.println("❌ sendMediaGroupToChannel xatolik: " + e.getMessage());
+                return false;
+            }
+        }
+
+        // ==================== QOLGAN METODLAR (O'ZGARISHSIZ) ====================
+
         private void sendTechAdminUserManagement(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -1601,31 +1867,26 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // 1. Foydalanuvchini bloklash
             InlineKeyboardButton blockBtn = new InlineKeyboardButton();
             blockBtn.setText("⛔ Foydalanuvchini bloklash");
             blockBtn.setCallbackData("tech_block_user");
             rows.add(Collections.singletonList(blockBtn));
 
-            // 2. Blokdan chiqarish
             InlineKeyboardButton unblockBtn = new InlineKeyboardButton();
             unblockBtn.setText("✅ Blokdan chiqarish");
             unblockBtn.setCallbackData("tech_unblock_user");
             rows.add(Collections.singletonList(unblockBtn));
 
-            // 3. Foydalanuvchini izlash
             InlineKeyboardButton searchBtn = new InlineKeyboardButton();
             searchBtn.setText("🔍 Foydalanuvchini izlash");
             searchBtn.setCallbackData("tech_search_user");
             rows.add(Collections.singletonList(searchBtn));
 
-            // 4. Taklif qilganlarni izlash
             InlineKeyboardButton searchRefBtn = new InlineKeyboardButton();
             searchRefBtn.setText("🔗 Taklif qilganlarni izlash");
             searchRefBtn.setCallbackData("tech_search_referral");
             rows.add(Collections.singletonList(searchRefBtn));
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("tech_admin_panel");
@@ -1636,7 +1897,6 @@ public class Main {
             execute(msg);
         }
 
-        // 2. Bloklangan foydalanuvchilarni ko'rsatish
         private void showBlockedUsers(long adminId) throws TelegramApiException {
             if (bannedUsers.isEmpty()) {
                 sendText(adminId, "📭 Bloklangan foydalanuvchilar yo'q.");
@@ -1663,7 +1923,6 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // Har bir bloklangan foydalanuvchi uchun tugma
             index = 1;
             for (Long userId : bannedUsers) {
                 InlineKeyboardButton unblockBtn = new InlineKeyboardButton();
@@ -1674,7 +1933,6 @@ public class Main {
                 index++;
             }
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("tech_user_management");
@@ -1685,7 +1943,6 @@ public class Main {
             execute(msg);
         }
 
-        // 3. Foydalanuvchini blokdan chiqarish
         private void unblockUserByIndex(long adminId, int index) throws TelegramApiException {
             int currentIndex = 1;
             Long userIdToUnblock = null;
@@ -1712,7 +1969,6 @@ public class Main {
             showBlockedUsers(adminId);
         }
 
-        // 4. Admin bilan bog'lanish menyusi
         private void sendAdminContactMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -1722,19 +1978,16 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // 1. Kanal egasi
             InlineKeyboardButton channelAdminBtn = new InlineKeyboardButton();
             channelAdminBtn.setText("📢 Kanal egasi & Bot admini");
             channelAdminBtn.setCallbackData("contact_channel_admin");
             rows.add(Collections.singletonList(channelAdminBtn));
 
-            // 2. Teknik admin
             InlineKeyboardButton techAdminBtn = new InlineKeyboardButton();
             techAdminBtn.setText("👨‍💻 Teknik admin (taklif/shikoyat)");
             techAdminBtn.setCallbackData("contact_tech_admin");
             rows.add(Collections.singletonList(techAdminBtn));
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("menu_main");
@@ -1745,15 +1998,13 @@ public class Main {
             execute(msg);
         }
 
-        // 5. Ro'yxatdan o'tishni yakunlash (tugmani o'chirish)
         private void completeRegistration(long chatId) throws TelegramApiException {
             userRegisteredMap.put(chatId, true);
             int userNumber = userCounter.getAndIncrement();
             userNumberMap.put(chatId, userNumber);
             userAdCountMap.put(chatId, 0);
-            addScoreToUser(chatId, 10); // Boshlang'ich ball
+            addScoreToUser(chatId, 10);
 
-            // REFERRAL BALL BERISH (agar referral orqali kirgan bo'lsa)
             if (referralMap.containsKey(chatId)) {
                 Long referrerId = referralMap.get(chatId);
                 if (referrerId != null) {
@@ -1771,7 +2022,6 @@ public class Main {
                             "🏆 Jami ball: " + getUserScore(referrerId) + "\n" +
                             "👥 Jami takliflar: " + getReferralCount(referrerId) + " kishi");
 
-                    // Texnik adminga ham xabar yuborish
                     sendText(TECHNICAL_ADMIN_ID, "🔗 Yangi referral!\n" +
                             "👤 Referrer: #" + referrerNumber + " @" + referrerUsername.replace("@", "") + "\n" +
                             "👥 Yangi: #" + userNumber + " @" + userUsernameMap.getOrDefault(chatId, "Anonim").replace("@", "") + "\n" +
@@ -1779,7 +2029,6 @@ public class Main {
                 }
             }
 
-            // Tugmani o'chirish
             try {
                 ReplyKeyboardRemove keyboardRemove = new ReplyKeyboardRemove();
                 keyboardRemove.setRemoveKeyboard(true);
@@ -1797,14 +2046,12 @@ public class Main {
             }
         }
 
-        // Takliflar sonini hisoblash
         private int getReferralCount(long userId) {
             return (int) referralMap.entrySet().stream()
                     .filter(e -> e.getValue().equals(userId))
                     .count();
         }
 
-        // 6. Konkurs reytingi
         private void sendKonkursRating(long chatId) throws TelegramApiException {
             List<Map.Entry<Long, Integer>> sortedScores = userScores.entrySet()
                     .stream()
@@ -1833,7 +2080,6 @@ public class Main {
                     username = username.substring(1);
                 }
 
-                // Taklif qilgan odamlar sonini hisoblash
                 int referralsCount = getReferralCount(userId);
 
                 String medal = "";
@@ -1867,13 +2113,11 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // Taklif qilgan odamlarni ko'rish tugmasi
             InlineKeyboardButton referralsBtn = new InlineKeyboardButton();
             referralsBtn.setText("👥 Taklif qilganlarimni ko'rish");
             referralsBtn.setCallbackData("view_my_referrals");
             rows.add(Collections.singletonList(referralsBtn));
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("menu_konkurs");
@@ -1884,7 +2128,6 @@ public class Main {
             execute(msg);
         }
 
-        // Foydalanuvchi uchun taklif qilganlarini ko'rish funksiyasi
         private void showMyReferrals(long chatId) throws TelegramApiException {
             List<Long> myReferrals = referralMap.entrySet().stream()
                     .filter(entry -> entry.getValue().equals(chatId))
@@ -1933,7 +2176,6 @@ public class Main {
             execute(msg);
         }
 
-        // Reytingni hisoblash
         private int getUserRank(long userId) {
             int userScore = getUserScore(userId);
             int rank = 1;
@@ -1947,9 +2189,7 @@ public class Main {
             return rank;
         }
 
-        // 7. Konkurs takliflar (teknik admin uchun)
         private void sendKonkursTakliflar(long chatId) throws TelegramApiException {
-            // Top 10 ni olish
             List<Map.Entry<Long, Integer>> topUsers = userScores.entrySet()
                     .stream()
                     .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
@@ -1973,7 +2213,6 @@ public class Main {
                 String username = userUsernameMap.getOrDefault(userId, "Noma'lum");
                 String phone = userPhones.getOrDefault(userId, "Telefon yo'q");
 
-                // Taklif qilgan odamlar sonini hisoblash
                 int referralsCount = getReferralCount(userId);
 
                 ratingText.append(i + 1).append(". #").append(userNumber)
@@ -1992,7 +2231,6 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // Har bir foydalanuvchi uchun tugma (1 dan 10 gacha)
             for (int i = 1; i <= 10; i++) {
                 if (i <= topUsers.size()) {
                     InlineKeyboardButton userBtn = new InlineKeyboardButton();
@@ -2002,7 +2240,6 @@ public class Main {
                 }
             }
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("tech_admin_panel");
@@ -2013,9 +2250,7 @@ public class Main {
             execute(msg);
         }
 
-        // Detal ma'lumotlarni ko'rsatish (4-chi odamni tanlasa)
         private void showReferralDetailsForAdmin(long adminId, int rank) throws TelegramApiException {
-            // Top 10 ni olish
             List<Map.Entry<Long, Integer>> topUsers = userScores.entrySet()
                     .stream()
                     .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
@@ -2030,7 +2265,6 @@ public class Main {
             Map.Entry<Long, Integer> userEntry = topUsers.get(rank - 1);
             Long userId = userEntry.getKey();
 
-            // Ushbu foydalanuvchi qo'shgan odamlarni topish
             List<Long> referrals = referralMap.entrySet().stream()
                     .filter(e -> e.getValue().equals(userId))
                     .map(Map.Entry::getKey)
@@ -2078,13 +2312,11 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // Ballarni 0 qilish tugmasi
             InlineKeyboardButton resetBtn = new InlineKeyboardButton();
             resetBtn.setText("🔄 Ballarni 0 qilish");
             resetBtn.setCallbackData("tech_reset_scores_" + userId);
             rows.add(Collections.singletonList(resetBtn));
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("tech_konkurs_takliflar");
@@ -2095,13 +2327,11 @@ public class Main {
             execute(msg);
         }
 
-        // 8. Texnik admin uchun detallı statistika
         private void sendDetailedStats(long adminId) throws TelegramApiException {
             int totalUsers = userNumberMap.size();
             int totalActiveUsers = userScores.size();
             int totalReferrals = referralMap.size();
 
-            // Top referrer ni topish
             Map<Long, Long> referralCounts = new HashMap<>();
             for (Long referee : referralMap.values()) {
                 referralCounts.put(referee, referralCounts.getOrDefault(referee, 0L) + 1);
@@ -2148,7 +2378,6 @@ public class Main {
             execute(msg);
         }
 
-        // Yordamchi metodlar
         private double calculateAverageScore() {
             if (userScores.isEmpty()) return 0;
             double sum = userScores.values().stream().mapToInt(Integer::intValue).sum();
@@ -2159,9 +2388,7 @@ public class Main {
             return userScores.values().stream().max(Integer::compareTo).orElse(0);
         }
 
-        // Taklif qilgan odamlarni ID bo'yicha qidirish
         private void searchReferralsById(long adminId, long searchId) throws TelegramApiException {
-            // ID bo'yicha referral qilgan odamni topish
             Long referrerId = referralMap.get(searchId);
 
             if (referrerId == null) {
@@ -2183,7 +2410,6 @@ public class Main {
                     .append("\n• 📞 Telefon: ").append(userPhones.getOrDefault(referrerId, "Noma'lum"))
                     .append("\n\n");
 
-            // Taklif qilgan barcha odamlarni ko'rsatish
             List<Long> referrals = referralMap.entrySet().stream()
                     .filter(e -> e.getValue().equals(referrerId))
                     .map(Map.Entry::getKey)
@@ -2202,7 +2428,6 @@ public class Main {
             sendText(adminId, result.toString());
         }
 
-        // Texnik admin panelini yangilaymiz
         private void sendTechnicalAdminMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -2246,9 +2471,6 @@ public class Main {
             execute(msg);
         }
 
-        // ESKI METODLAR (YANGILANGAN) ====================
-
-        // Foydalanuvchi reklamalarini sahifalangan holda ko'rsatish
         private void showUserAdsInPages(long chatId) throws TelegramApiException {
             cleanupExpiredAds();
 
@@ -2277,7 +2499,6 @@ public class Main {
             showUserAdsInPagesWithPage(chatId, 0);
         }
 
-        // Sahifalangan reklamalarni ko'rsatish
         private void showUserAdsInPagesWithPage(long chatId, int pageNumber) throws TelegramApiException {
             List<UserAd> userAds = userAdsMap.getOrDefault(chatId, new ArrayList<>());
             List<UserAd> activeAds = userAds.stream()
@@ -2353,7 +2574,6 @@ public class Main {
             execute(msg);
         }
 
-        // Har bir reklamani alohida ko'rsatish
         private void showIndividualAd(long chatId, long adId) throws TelegramApiException {
             List<UserAd> userAds = userAdsMap.get(chatId);
             UserAd targetAd = null;
@@ -2395,7 +2615,6 @@ public class Main {
             }
         }
 
-        // Reklama tugmalarini yaratish
         private InlineKeyboardMarkup createAdButtons(UserAd ad, long chatId) {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
@@ -2439,7 +2658,6 @@ public class Main {
             return markup;
         }
 
-        // Reklama ma'lumotlarini qurish
         private String buildAdDetailsMessage(UserAd ad) {
             StringBuilder sb = new StringBuilder();
 
@@ -2495,7 +2713,6 @@ public class Main {
             return sb.toString();
         }
 
-        // Reklamani "Berib bo'lindi" deb belgilash
         private void markAdAsCompleted(long chatId, long adId) throws TelegramApiException {
             List<UserAd> userAds = userAdsMap.get(chatId);
 
@@ -2505,10 +2722,8 @@ public class Main {
                         ad.isActive = false;
                         ad.phone = "✅ Berib bo'ldik";
 
-                        // Kanaldagi reklamani yangilash
                         updateChannelAd(chatId, adId, "berib_bo'ldik");
 
-                        // Adminlarga xabar yuborish
                         String adminMessage = "📢 REKLAMA YAKUNLANDI\n\n" +
                                 "Foydalanuvchi: #" + userNumberMap.getOrDefault(chatId, 0) + "\n" +
                                 "Reklama #: " + ad.adNumber + "\n" +
@@ -2528,7 +2743,6 @@ public class Main {
             }
         }
 
-        // Reklamani "Sotildi" deb belgilash
         private void markAdAsSold(long chatId, long adId) throws TelegramApiException {
             List<UserAd> userAds = userAdsMap.get(chatId);
 
@@ -2538,10 +2752,8 @@ public class Main {
                         ad.isActive = false;
                         ad.phone = "💰 Sotildi";
 
-                        // Kanaldagi reklamani yangilash
                         updateChannelAd(chatId, adId, "sotildi");
 
-                        // Adminlarga xabar yuborish
                         String adminMessage = "📢 REKLAMA YAKUNLANDI\n\n" +
                                 "Foydalanuvchi: #" + userNumberMap.getOrDefault(chatId, 0) + "\n" +
                                 "Reklama #: " + ad.adNumber + "\n" +
@@ -2561,7 +2773,6 @@ public class Main {
             }
         }
 
-        // Kanal havolasini ko'rsatish
         private void showChannelAdLink(long chatId, long adId) {
             List<UserAd> userAds = userAdsMap.get(chatId);
 
@@ -2586,7 +2797,6 @@ public class Main {
             }
         }
 
-        // Kanaldagi reklamani yangilash
         private void updateChannelAd(long userId, long adId, String status) throws TelegramApiException {
             List<UserAd> userAds = userAdsMap.get(userId);
             if (userAds == null) return;
@@ -2603,7 +2813,7 @@ public class Main {
 
             try {
                 EditMessageCaption editCaption = new EditMessageCaption();
-                editCaption.setChatId(CHANNEL_USERNAME);
+                editCaption.setChatId(CHANNEL_ID);
                 editCaption.setMessageId(targetAd.channelMessageId);
 
                 String newCaption = buildUpdatedChannelCaption(targetAd, status);
@@ -2617,7 +2827,6 @@ public class Main {
             }
         }
 
-        // Yangilangan kanal caption
         private String buildUpdatedChannelCaption(UserAd ad, String status) {
             StringBuilder caption = new StringBuilder();
 
@@ -2625,7 +2834,7 @@ public class Main {
                 caption.append("#HADIYA 🎁\n\n");
                 caption.append("📝 Mushukcha yaxshi insonlarga tekinga sovg'a qilinadi.\n\n");
                 caption.append("📍 Manzil: ").append(ad.manzil).append("\n");
-                if ("berib_bo'lindi".equals(status)) {
+                if ("berib_bo'ldik".equals(status)) {
                     caption.append("✅ BERIB BO'LDIK \n\n");
                 } else {
                     caption.append("📞 Nomer: ").append(ad.phone).append("\n\n");
@@ -2650,15 +2859,14 @@ public class Main {
             }
 
             caption.append("\n👤 [Admin](https://t.me/zayd_catlover)\n");
-            caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot?start=reklama)\n\n");
-            caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-            caption.append(" 🌐[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
-            caption.append(" ✉️[Telegram](https://t.me/uzbek_cats)");
+            caption.append("📢 [Reklama berish uchun](https://t.me/").append(BOT_USERNAME.replace("@", "")).append("?start=reklama)\n\n");
+            caption.append("[YouTube](https://youtu.be/vdwgSB7_amw) | ");
+            caption.append("[Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ");
+            caption.append("[Telegram](https://t.me/uzbek_cats)");
 
             return caption.toString();
         }
 
-        // Reklama turi bo'yicha emoji olish
         private String getAdTypeEmoji(String adType) {
             switch (adType) {
                 case "sotish": return "💰";
@@ -2668,7 +2876,6 @@ public class Main {
             }
         }
 
-        // 3 ta tugmalik menyu
         private void sendThreeButtonMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -2702,7 +2909,6 @@ public class Main {
             execute(msg);
         }
 
-        // Asosiy menyu
         private void sendMainMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -2754,7 +2960,6 @@ public class Main {
             execute(msg);
         }
 
-        // Telefon raqam so'rash
         private void sendPhoneRequest(long chatId) throws TelegramApiException {
             ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
             keyboard.setResizeKeyboard(true);
@@ -2779,7 +2984,6 @@ public class Main {
             execute(msg);
         }
 
-        // Konkurs shartlari
         private void sendKonkursShartlar(long chatId) throws TelegramApiException {
             String referralCode = generateReferralCode(chatId);
             String referralLink = "https://t.me/" + getBotUsername().replace("@", "") + "?start=" + referralCode;
@@ -2828,7 +3032,6 @@ public class Main {
             execute(msg);
         }
 
-        // Referral code yaratish
         private String generateReferralCode(long userId) {
             String code = "REF" + userId + "_" + System.currentTimeMillis();
             referralCodes.put(userId, code);
@@ -2836,18 +3039,15 @@ public class Main {
             return code;
         }
 
-        // Ball qo'shish
         private void addScoreToUser(long userId, int score) {
             int currentScore = userScores.getOrDefault(userId, 0);
             userScores.put(userId, currentScore + score);
         }
 
-        // Ballarni olish
         private int getUserScore(long userId) {
             return userScores.getOrDefault(userId, 0);
         }
 
-        // Texnik adminga foydalanuvchi ma'lumotlarini yuborish
         private void sendUserInfoToTechnicalAdmin(long userId) throws TelegramApiException {
             String fullName = userFullNameMap.getOrDefault(userId, "Noma'lum");
             String phone = phoneMap.getOrDefault(userId, "Noma'lum");
@@ -2865,7 +3065,6 @@ public class Main {
             sendText(TECHNICAL_ADMIN_ID, userInfo);
         }
 
-        // Admin panel
         private void sendAdminPanel(long chatId) throws TelegramApiException {
             if (!ADMIN_IDS.contains(chatId)) {
                 sendText(chatId, "❌ Siz admin emassiz!");
@@ -2926,7 +3125,6 @@ public class Main {
             execute(msg);
         }
 
-        // Bot ustroystiva menyusi
         private void sendBotControlMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -2957,7 +3155,6 @@ public class Main {
             execute(msg);
         }
 
-        // Bot statistikasi
         private void sendBotStatistics(long adminId) throws TelegramApiException {
             int totalUsers = userNumberMap.size();
             int totalAds = userAdsMap.values().stream().mapToInt(List::size).sum();
@@ -2988,7 +3185,6 @@ public class Main {
             sendText(adminId, statsText);
         }
 
-        // Diagramma yaratish
         private String createBarChart(double percent, int length) {
             int filled = (int) Math.round(percent * length / 100.0);
             StringBuilder bar = new StringBuilder();
@@ -3002,7 +3198,6 @@ public class Main {
             return bar.toString();
         }
 
-        // Foydalanuvchini bloklash
         private void banUser(long adminId, int userNumber) throws TelegramApiException {
             Long userIdToBan = null;
 
@@ -3031,7 +3226,6 @@ public class Main {
             sendText(adminId, "✅ #" + userNumber + " raqamli foydalanuvchi muvaffaqiyatli bloklandi!");
         }
 
-        // Foydalanuvchini blokdan chiqarish
         private void unblockUser(long adminId, int selection) throws TelegramApiException {
             int index = 1;
             Long userIdToUnblock = null;
@@ -3056,7 +3250,6 @@ public class Main {
             sendText(adminId, "✅ #" + userNumber + " foydalanuvchi blokdan chiqarildi.");
         }
 
-        // Foydalanuvchini izlash
         private void searchUserByNumber(long adminId, String numberStr) throws TelegramApiException {
             try {
                 int userNumber = Integer.parseInt(numberStr.trim());
@@ -3107,7 +3300,6 @@ public class Main {
             sendText(adminId, "❌ Bu funksiya hozir ishlamaydi!");
         }
 
-        // Media turini tanlash
         private void sendMediaTypeSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3131,7 +3323,6 @@ public class Main {
             execute(msg);
         }
 
-        // Mushuk sonini tanlash
         private void handleMushukSoni(long chatId, int soni) throws TelegramApiException {
             mushukSoniMap.put(chatId, soni);
             sendMediaTypeSelection(chatId);
@@ -3180,7 +3371,6 @@ public class Main {
             execute(msg);
         }
 
-        // Platforma tanlash
         private void sendPlatformaSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3209,7 +3399,6 @@ public class Main {
             execute(msg);
         }
 
-        // Yosh tanlash
         private void sendAgeSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3218,7 +3407,6 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // 5 ta qator, har qatorda 4 ta tugma
             for (int i = 0; i < ages.size(); i += 4) {
                 List<InlineKeyboardButton> row = new ArrayList<>();
                 for (int j = i; j < Math.min(i + 4, ages.size()); j++) {
@@ -3226,7 +3414,6 @@ public class Main {
                     String age = ages.get(j);
                     btn.setText(age);
 
-                    // To'g'ri callbackData format
                     String callbackData = "age_" + age.toLowerCase()
                             .replace(" ", "_")
                             .replace("+", "")
@@ -3234,7 +3421,6 @@ public class Main {
                             .replace(" ", "_")
                             .replace(".", "");
 
-                    // Alohida holatlar
                     if (age.equals("1,5 yosh")) {
                         callbackData = "age_15_yosh";
                     } else if (age.equals("2,5 yosh")) {
@@ -3258,7 +3444,6 @@ public class Main {
             execute(msg);
         }
 
-        // Sog'lik tanlash
         private void sendHealthSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3281,7 +3466,6 @@ public class Main {
             execute(msg);
         }
 
-        // Jins tanlash
         private void sendGenderSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3305,7 +3489,6 @@ public class Main {
             execute(msg);
         }
 
-        // Sterilization tanlash
         private void sendSterilizationSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3320,7 +3503,7 @@ public class Main {
             rows.add(Collections.singletonList(b1));
 
             InlineKeyboardButton b2 = new InlineKeyboardButton();
-            b2.setText("❌ Nasl olsa bulmaydi");
+            b2.setText("❌ Nasil olsa bulmaydi");
             b2.setCallbackData("sterilization_no");
             rows.add(Collections.singletonList(b2));
 
@@ -3329,7 +3512,6 @@ public class Main {
             execute(msg);
         }
 
-        // Breed tanlash
         private void sendBreedSelectionWithCustom(long chatId, int page) throws TelegramApiException {
             List<String> currentBreeds = breedPages.get(page);
 
@@ -3377,7 +3559,6 @@ public class Main {
             execute(msg);
         }
 
-        // Viloyat tanlash
         private void sendViloyatSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3398,7 +3579,6 @@ public class Main {
             execute(msg);
         }
 
-        // Preview yuborish
         private void sendPreview(long chatId) throws TelegramApiException {
             List<String> userPhotos = photosMap.get(chatId);
             String mediaType = mediaTypeMap.getOrDefault(chatId, "photo");
@@ -3451,7 +3631,6 @@ public class Main {
             }
         }
 
-        // Preview caption qurish
         private String buildPreviewCaption(long chatId) {
             StringBuilder sb = new StringBuilder();
             String adType = adTypeMap.getOrDefault(chatId, "");
@@ -3492,7 +3671,6 @@ public class Main {
             return sb.toString();
         }
 
-        // Davom etish tugmasi
         private void sendContinueButton(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3511,7 +3689,6 @@ public class Main {
             execute(msg);
         }
 
-        // Davom etishni qayta ishlash
         private void handleContinueProcess(long chatId) throws TelegramApiException {
             List<String> userPhotos = photosMap.get(chatId);
 
@@ -3523,7 +3700,6 @@ public class Main {
             sendViloyatSelection(chatId);
         }
 
-        // Narxlar ro'yxati
         private void sendPriceList(long chatId) throws TelegramApiException {
             String priceText = "🐱 *MUSHUK REKLAMA NARXLARI*\n\n" +
                     "❕ Iltimos oxirigacha diqqat bilan o'qib tanishib chiqing.\n\n" +
@@ -3558,7 +3734,6 @@ public class Main {
             execute(msg);
         }
 
-        // Telefon raqamni tekshirish
         private boolean isValidPhoneNumber(String phone) {
             String regex = "^\\+998\\s\\d{2}\\s\\d{3}\\s\\d{2}\\s\\d{2}$";
             if (!phone.matches(regex)) {
@@ -3568,7 +3743,6 @@ public class Main {
             return true;
         }
 
-        // Reklama turini tanlash
         private void sendAdTypeSelection(long chatId) throws TelegramApiException {
             if (userHasPendingAdMap.getOrDefault(chatId, false)) {
                 Date lastAdTime = lastAdTimeMap.get(chatId);
@@ -3624,7 +3798,6 @@ public class Main {
             execute(msg);
         }
 
-        // Yordam menyusi
         private void sendYordamMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3658,7 +3831,6 @@ public class Main {
             execute(msg);
         }
 
-        // Yordam turlari
         private void handleYordamOnasiz(long chatId) throws TelegramApiException {
             stateMap.put(chatId, "yordam_onasiz");
             photosMap.put(chatId, new ArrayList<>());
@@ -3767,7 +3939,6 @@ public class Main {
             sendText(chatId, "📸 Endi rasm yuboring (1-3 ta rasm yoki 10 soniyagacha video):");
         }
 
-        // Yordam uchun viloyat tanlash
         private void sendYordamViloyatSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -3788,7 +3959,6 @@ public class Main {
             execute(msg);
         }
 
-        // Yordam preview
         private void sendYordamPreview(long chatId, String userInfo) throws TelegramApiException {
             List<String> userPhotos = photosMap.get(chatId);
             String state = stateMap.get(chatId);
@@ -3856,7 +4026,6 @@ public class Main {
             }
         }
 
-        // Admin statistikasi
         private void sendAdminStatisticsMenu(long chatId) throws TelegramApiException {
             if (!ADMIN_IDS.contains(chatId)) {
                 sendText(chatId, "❌ Siz admin emassiz!");
@@ -3895,7 +4064,6 @@ public class Main {
             execute(msg);
         }
 
-        // Statistikani ko'rsatish
         private void showStatistics(long chatId, String adType) throws TelegramApiException {
             List<AdRecord> records = statisticsMap.getOrDefault(adType, new ArrayList<>());
 
@@ -3951,7 +4119,6 @@ public class Main {
             execute(msg);
         }
 
-        // Admin breed tanlash
         private void handleAdminSetBreed(long adminId, String data) throws TelegramApiException {
             Long userId = adminEditUserIdMap.get(adminId);
             if (userId == null) return;
@@ -3963,7 +4130,6 @@ public class Main {
             sendAdminEditMenu(adminId, userId);
         }
 
-        // Admin field edit
         private void handleAdminEditField(long adminId, String data) throws TelegramApiException {
             String field = data.substring("admin_edit_field_".length());
             Long userId = adminEditUserIdMap.get(adminId);
@@ -3985,29 +4151,31 @@ public class Main {
             }
         }
 
-        // Admin breed edit
         private void handleAdminEditBreed(long adminId) throws TelegramApiException {
             sendAdminBreedSelection(adminId);
         }
 
-        // Admin edit confirm
         private void handleAdminEditConfirm(long adminId) throws TelegramApiException {
             Long userId = adminEditUserIdMap.get(adminId);
             if (userId == null) return;
 
             int adNumber = userAdCountMap.getOrDefault(userId, 0) + 1;
             userAdCountMap.put(userId, adNumber);
-            postToChannel(userId, adNumber);
-            sendText(userId, "✅ E'loningiz kanalga joylandi!");
-            sendText(adminId, "✅ E'lon o'zgartirildi va kanalga joylandi!");
+
+            boolean success = postToChannel(userId, adNumber);
+
+            if (success) {
+                sendText(userId, "✅ E'loningiz kanalga joylandi!");
+                sendText(adminId, "✅ E'lon o'zgartirildi va kanalga joylandi!");
+            } else {
+                sendText(adminId, "❌ E'lonni kanalga joylashda xatolik!");
+            }
 
             deleteAdminMessages(userId);
             adminEditUserIdMap.remove(adminId);
-
             userHasPendingAdMap.put(userId, false);
         }
 
-        // Admin breed selection
         private void sendAdminBreedSelection(long adminId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(adminId));
@@ -4037,7 +4205,6 @@ public class Main {
             execute(msg);
         }
 
-        // Admin edit menu
         private void sendAdminEditMenu(long adminId, long userId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(adminId));
@@ -4087,7 +4254,6 @@ public class Main {
             execute(msg);
         }
 
-        // Admin preview caption
         private String buildAdminPreviewCaption(long userId) {
             return "📋 Joriy ma'lumotlar:\n\n" +
                     "🐱 Zot: " + breedMap.getOrDefault(userId, "—") + "\n" +
@@ -4100,7 +4266,6 @@ public class Main {
                     "💰 Narx: " + priceMap.getOrDefault(userId, "—");
         }
 
-        // Konkurs menyusi
         private void sendKonkursMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -4134,7 +4299,6 @@ public class Main {
             execute(msg);
         }
 
-        // Konkurs mukofot
         private void sendKonkursMukofot(long chatId) throws TelegramApiException {
             try {
                 if (currentKonkursImageUrl != null && !currentKonkursImageUrl.isEmpty()) {
@@ -4153,7 +4317,6 @@ public class Main {
             }
         }
 
-        // Konkurs o'zgartirish
         private void sendKonkursChangeMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -4187,25 +4350,21 @@ public class Main {
             execute(msg);
         }
 
-        // Konkurs image only
         private void handleAdminKonkursImageOnly(long adminId) throws TelegramApiException {
             stateMap.put(adminId, "admin_await_konkurs_image_only");
             sendText(adminId, "🖼️ Iltimos, yangi konkurs rasmini yuboring:");
         }
 
-        // Konkurs text only
         private void handleAdminKonkursTextOnly(long adminId) throws TelegramApiException {
             stateMap.put(adminId, "admin_await_konkurs_text_only");
             sendText(adminId, "📝 Iltimos, yangi konkurs matnini yuboring:");
         }
 
-        // Konkurs both
         private void handleAdminKonkursBoth(long adminId) throws TelegramApiException {
             stateMap.put(adminId, "admin_await_konkurs_image_both");
             sendText(adminId, "🖼️ Iltimos, yangi konkurs rasmini yuboring:");
         }
 
-        // About menyusi
         private void sendAboutMenu(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -4231,7 +4390,6 @@ public class Main {
             execute(msg);
         }
 
-        // Feedback yuborish
         private void sendFeedbackToOwner(long userId, String feedback) throws TelegramApiException {
             String userInfo = userUsernameMap.containsKey(userId) ?
                     userUsernameMap.get(userId) : "ID: " + userId;
@@ -4241,10 +4399,9 @@ public class Main {
                     "🆔 User ID: " + userId + "\n" +
                     "📄 Xabar:\n" + feedback;
 
-            sendText(7038296036L, message);
+            sendText(TECHNICAL_ADMIN_ID, message);
         }
 
-        // Eski e'lonlarni tozalash
         private void cleanupExpiredAds() {
             System.out.println("🔄 Eski e'lonlarni tozalash...");
 
@@ -4265,7 +4422,6 @@ public class Main {
             }
         }
 
-        // Tozalash timer'ini ishga tushirish
         private void startCleanupTimer() {
             Timer timer = new Timer();
             timer.scheduleAtFixedRate(new TimerTask() {
@@ -4276,7 +4432,6 @@ public class Main {
             }, 24 * 60 * 60 * 1000, 24 * 60 * 60 * 1000);
         }
 
-        // Foydalanuvchi e'lonini saqlash
         private void saveUserAd(long userId, int adNumber) {
             if (!userAdsMap.containsKey(userId)) {
                 userAdsMap.put(userId, new ArrayList<>());
@@ -4305,7 +4460,6 @@ public class Main {
                     ", Reklama #" + adNumber + ", E'lonlar soni: " + userAdsMap.get(userId).size());
         }
 
-        // Reklama paneli
         private void sendAdPanel(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -4334,12 +4488,10 @@ public class Main {
             execute(msg);
         }
 
-        // Oxirgi reklama vaqti
         private String getLastAdTime() {
             return "Hali reklama yo'q";
         }
 
-        // Yangi reklama boshlash
         private void startNewAd(long chatId) throws TelegramApiException {
             stateMap.put(chatId, "ad_await_text");
             sendText(chatId, "📝 Reklama matnini kiriting:\n\n" +
@@ -4353,7 +4505,6 @@ public class Main {
                     "👉 @mystore");
         }
 
-        // Reklama rasmini so'rash
         private void askForAdPhoto(long chatId) throws TelegramApiException {
             stateMap.put(chatId, "ad_await_photo");
             sendText(chatId, "🖼️ Endi reklama rasmini yuboring:\n\n" +
@@ -4380,7 +4531,6 @@ public class Main {
             execute(msg);
         }
 
-        // Reklama preview
         private void showAdPreview(long chatId) throws TelegramApiException {
             String adText = adTextMap.get(chatId);
             String photoId = adPhotoMap.get(chatId);
@@ -4443,7 +4593,6 @@ public class Main {
             }
         }
 
-        // Reklamani yuborish
         private void broadcastAd(long chatId) throws TelegramApiException {
             String adText = adTextMap.get(chatId);
             String photoId = adPhotoMap.get(chatId);
@@ -4496,201 +4645,6 @@ public class Main {
             stateMap.put(chatId, "");
         }
 
-        // Kanalga post yuborish
-        private void postToChannel(long userId, int adNumber) throws TelegramApiException {
-            List<String> userPhotos = photosMap.get(userId);
-            if (userPhotos == null || userPhotos.isEmpty()) {
-                System.out.println("❌ Rasmlar topilmadi!");
-                return;
-            }
-
-            saveUserAd(userId, adNumber);
-
-            String adType = adTypeMap.getOrDefault(userId, "");
-            saveStatistics(userId, adType, adNumber);
-
-            List<String> photos = new ArrayList<>();
-            String videoFileId = null;
-
-            for (String media : userPhotos) {
-                if (media.startsWith("video:")) {
-                    videoFileId = media.substring(6);
-                } else {
-                    photos.add(media);
-                }
-            }
-
-            Integer channelMessageId = null;
-
-            if (videoFileId != null && !photos.isEmpty()) {
-                channelMessageId = sendVideoWithPhotosToChannel(userId, videoFileId, photos, adNumber);
-            }
-            else if (videoFileId != null) {
-                channelMessageId = sendVideoToChannel(userId, videoFileId, adNumber);
-            }
-            else if (!photos.isEmpty()) {
-                channelMessageId = sendPhotosToChannel(userId, photos, adNumber);
-            }
-
-            if (channelMessageId != null) {
-                List<UserAd> userAds = userAdsMap.get(userId);
-                if (userAds != null && !userAds.isEmpty()) {
-                    UserAd lastAd = userAds.get(userAds.size() - 1);
-                    lastAd.channelMessageId = channelMessageId;
-                    System.out.println("✅ Kanaldagi post ID saqlandi: " + channelMessageId + " reklama uchun: " + lastAd.adId);
-                }
-            }
-
-            userHasPendingAdMap.put(userId, false);
-        }
-
-        // Video va rasmlarni kanalga yuborish
-        private Integer sendVideoWithPhotosToChannel(long userId, String videoFileId, List<String> photos, int adNumber) throws TelegramApiException {
-            String caption = buildChannelCaption(userId, adTypeMap.getOrDefault(userId, ""),
-                    manzilMap.getOrDefault(userId, ""), phoneMap.getOrDefault(userId, ""), adNumber);
-
-            try {
-                SendVideo videoMsg = new SendVideo();
-                videoMsg.setChatId(CHANNEL_USERNAME);
-                videoMsg.setVideo(new InputFile(videoFileId));
-                videoMsg.setCaption(caption);
-                videoMsg.setParseMode("Markdown");
-                Message sentMessage = execute(videoMsg);
-
-                Integer messageId = sentMessage.getMessageId();
-
-                for (String photo : photos) {
-                    SendPhoto photoMsg = new SendPhoto();
-                    photoMsg.setChatId(CHANNEL_USERNAME);
-                    photoMsg.setPhoto(new InputFile(photo));
-                    execute(photoMsg);
-                }
-
-                return messageId;
-
-            } catch (Exception e) {
-                System.out.println("❌ Video+rasm yuborishda xatolik: " + e.getMessage());
-                SendVideo videoMsg = new SendVideo();
-                videoMsg.setChatId(CHANNEL_USERNAME);
-                videoMsg.setVideo(new InputFile(videoFileId));
-                videoMsg.setCaption(caption);
-                videoMsg.setParseMode("Markdown");
-                Message sentMessage = execute(videoMsg);
-                return sentMessage.getMessageId();
-            }
-        }
-
-        // Videoni kanalga yuborish
-        private Integer sendVideoToChannel(long userId, String videoFileId, int adNumber) throws TelegramApiException {
-            String caption = buildChannelCaption(userId, adTypeMap.getOrDefault(userId, ""),
-                    manzilMap.getOrDefault(userId, ""), phoneMap.getOrDefault(userId, ""), adNumber);
-
-            SendVideo videoMsg = new SendVideo();
-            videoMsg.setChatId(CHANNEL_USERNAME);
-            videoMsg.setVideo(new InputFile(videoFileId));
-            videoMsg.setCaption(caption);
-            videoMsg.setParseMode("Markdown");
-            Message sentMessage = execute(videoMsg);
-            return sentMessage.getMessageId();
-        }
-
-        // Rasmlarni kanalga yuborish
-        private Integer sendPhotosToChannel(long userId, List<String> photos, int adNumber) throws TelegramApiException {
-            String caption = buildChannelCaption(userId, adTypeMap.getOrDefault(userId, ""),
-                    manzilMap.getOrDefault(userId, ""), phoneMap.getOrDefault(userId, ""), adNumber);
-
-            if (photos.size() >= 2) {
-                SendMediaGroup mediaGroup = new SendMediaGroup();
-                mediaGroup.setChatId(CHANNEL_USERNAME);
-
-                List<InputMedia> mediaList = new ArrayList<>();
-
-                InputMediaPhoto media1 = new InputMediaPhoto();
-                media1.setMedia(photos.get(0));
-                media1.setCaption(caption);
-                media1.setParseMode("Markdown");
-                mediaList.add(media1);
-
-                for (int i = 1; i < photos.size(); i++) {
-                    InputMediaPhoto media = new InputMediaPhoto();
-                    media.setMedia(photos.get(i));
-                    mediaList.add(media);
-                }
-
-                mediaGroup.setMedias(mediaList);
-                List<Message> messages = execute(mediaGroup);
-                if (messages != null && !messages.isEmpty()) {
-                    return messages.get(0).getMessageId();
-                }
-                return null;
-            } else if (photos.size() == 1) {
-                SendPhoto post = new SendPhoto();
-                post.setChatId(CHANNEL_USERNAME);
-                post.setPhoto(new InputFile(photos.get(0)));
-                post.setCaption(caption);
-                post.setParseMode("Markdown");
-                Message sentMessage = execute(post);
-                return sentMessage.getMessageId();
-            }
-            return null;
-        }
-
-        // Kanal caption qurish
-        private String buildChannelCaption(long userId, String adType, String manzil, String phone, int adNumber) {
-            StringBuilder caption = new StringBuilder();
-
-            String breed = breedMap.getOrDefault(userId, "");
-            String age = ageMap.getOrDefault(userId, "");
-            String gender = genderMap.getOrDefault(userId, "");
-            String health = healthMap.getOrDefault(userId, "");
-            String sterilization = sterilizationMap.getOrDefault(userId, "");
-            String valyuta = valyutaMap.getOrDefault(userId, "so'm");
-            String narxBelgisi = "so'm".equals(valyuta) ? " so'm" : " $";
-
-            int userNumber = userNumberMap.getOrDefault(userId, 0);
-            String username = userUsernameMap.getOrDefault(userId, "");
-
-            if ("hadiya".equals(adType)) {
-                caption.append("#HADIYA 🎁\n\n");
-                caption.append("📝 Mushukcha yaxshi insonlarga tekinga sovg'a qilinadi. Iltimos mushukni sotadigan yoki chidolmay ko'chaga tashlab ketadigan bo'lsangiz olmang! Allohdan qo'rqing\n\n");
-                caption.append("🏠 Manzil: ").append(manzil).append("\n");
-                caption.append("📞 Nomer: ").append(phone).append("\n\n");
-                caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
-                caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
-                caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-                caption.append(" \uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)  ");
-                caption.append(" ✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
-
-            } else if ("vyazka".equals(adType)) {
-                caption.append("#VYAZKA 💝\n\n");
-                caption.append("📝").append(breed).append(" ").append(age).append(" ").append(gender.toLowerCase())
-                        .append(" ").append(sterilization).append(" ").append(health.toLowerCase()).append("\n\n");
-                caption.append("🏠 Manzil: ").append(manzil).append("\n");
-                caption.append("📞 Nomer: ").append(phone).append("\n\n");
-                caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
-                caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
-                caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-                caption.append(" \uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
-                caption.append(" ✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
-
-            } else {
-                caption.append("#SOTILADI 💰\n\n");
-                caption.append("📝").append(breed).append(" ").append(age).append(" ").append(gender.toLowerCase())
-                        .append(" ").append(sterilization).append(" ").append(health.toLowerCase()).append("\n\n");
-                caption.append("📍 Manzil: ").append(manzil).append("\n");
-                caption.append("💵 Narxi: ").append(priceMap.getOrDefault(userId, "")).append(narxBelgisi).append("\n");
-                caption.append("📞 Tel: ").append(phone).append("\n\n");
-                caption.append("👤 [Admin](https://t.me/zayd_catlover)\n");
-                caption.append("📢 [Reklama berish uchun](https://t.me/Uzbek_cat_bot").append("?start=reklama)\n\n");
-                caption.append("[YouTube](https://youtu.be/vdwgSB7_amw)");
-                caption.append(" \uD83C\uDF10[Instagram](https://www.instagram.com/p/C-cZkgstVGK/)");
-                caption.append(" ✉\uFE0F[Telegram](https://t.me/uzbek_cats)");
-            }
-
-            return caption.toString();
-        }
-
-        // File URL olish
         private String getFileUrl(String fileId) throws TelegramApiException {
             try {
                 org.telegram.telegrambots.meta.api.objects.File file =
@@ -4706,7 +4660,6 @@ public class Main {
             }
         }
 
-        // Statistikani saqlash
         private void saveStatistics(long userId, String adType, int adNumber) {
             String breed = breedMap.getOrDefault(userId, "");
             String phone = phoneMap.getOrDefault(userId, "");
@@ -4716,7 +4669,6 @@ public class Main {
             statisticsMap.get(adType).add(record);
         }
 
-        // Adminlarga yordam so'rovini bildirish
         private void notifyAdminForYordam(long chatId, String type) throws TelegramApiException {
             List<String> userPhotos = photosMap.get(chatId);
 
@@ -4773,7 +4725,6 @@ public class Main {
             }
         }
 
-        // Yordam postini kanalga yuborish
         private void postYordamToChannel(long userId) throws TelegramApiException {
             List<String> userPhotos = photosMap.get(userId);
             String state = stateMap.get(userId);
@@ -4800,28 +4751,27 @@ public class Main {
             int userNumber = userNumberMap.getOrDefault(userId, 0);
             String username = userUsernameMap.getOrDefault(userId, "");
             caption += "👤 Foydalanuvchi: #" + userNumber + " " + username + "\n\n";
-            caption += "[\uD83D\uDC51 Admin](https://t.me/zayd_catlover) | \n\n";
-            caption += "[\uD83C\uDFAC YouTube](https://youtu.be/vdwgSB7_amw) | ";
-            caption += "[\uD83D\uDC8E Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ";
-            caption += "[\uD83D\uDCAC Telegram](https://t.me/uzbek_cats)";
+            caption += "[👑 Admin](https://t.me/zayd_catlover) | \n\n";
+            caption += "[🎬 YouTube](https://youtu.be/vdwgSB7_amw) | ";
+            caption += "[💎 Instagram](https://www.instagram.com/p/C-cZkgstVGK/) | ";
+            caption += "[💬 Telegram](https://t.me/uzbek_cats)";
 
             if (userPhotos != null && !userPhotos.isEmpty()) {
                 SendPhoto post = new SendPhoto();
-                post.setChatId(CHANNEL_USERNAME);
+                post.setChatId(CHANNEL_ID);
                 post.setPhoto(new InputFile(userPhotos.get(0)));
                 post.setCaption(caption);
                 post.setParseMode("Markdown");
                 execute(post);
             } else {
                 SendMessage post = new SendMessage();
-                post.setChatId(CHANNEL_USERNAME);
+                post.setChatId(CHANNEL_ID);
                 post.setText(caption);
                 post.setParseMode("Markdown");
                 execute(post);
             }
         }
 
-        // Adminlarga bildirish
         private void notifyAdmin(long chatId) throws TelegramApiException {
             long adId = adIdCounter.incrementAndGet();
 
@@ -4876,7 +4826,6 @@ public class Main {
             }
         }
 
-        // Admin tugmalarini qo'shish
         private void addAdminButtons(Object message, long chatId, long adId) {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
 
@@ -4904,7 +4853,6 @@ public class Main {
             }
         }
 
-        // Admin xabarlarini o'chirish
         private void deleteAdminMessages(long userId) {
             try {
                 System.out.println("🗑️ Foydalanuvchi ma'lumotlari o'chirilmoqda: " + userId);
@@ -4934,7 +4882,6 @@ public class Main {
             }
         }
 
-        // Admin panel xabarlarini o'chirish
         private void deleteAdminPanelMessages(long userId) {
             try {
                 List<Integer> messagesToDelete = new ArrayList<>();
@@ -4964,7 +4911,6 @@ public class Main {
             }
         }
 
-        // Vyazka uchun viloyat tanlanganidan keyin
         private void sendViloyatSelectionForVyazka(long chatId, String viloyat) throws TelegramApiException {
             manzilMap.put(chatId, viloyat);
 
@@ -4990,7 +4936,6 @@ public class Main {
             execute(msg);
         }
 
-        // Valyuta tanlash
         private void sendValyutaSelection(long chatId) throws TelegramApiException {
             String adType = adTypeMap.getOrDefault(chatId, "");
 
@@ -5022,7 +4967,6 @@ public class Main {
             execute(msg);
         }
 
-        // To'lov ko'rsatmalari
         private void sendPaymentInstructions(long chatId) throws TelegramApiException {
             String adType = adTypeMap.getOrDefault(chatId, "");
             int narx = 0;
@@ -5055,12 +4999,10 @@ public class Main {
             stateMap.put(chatId, "wait_check");
         }
 
-        // Guruh xabarlarini tekshirish
         private void handleGroupMessage(Message message) throws TelegramApiException {
             checkAndDeleteAd(message);
         }
 
-        // Reklamani tekshirish va o'chirish
         private void checkAndDeleteAd(Message message) throws TelegramApiException {
             boolean shouldDelete = false;
             String reason = "";
@@ -5108,7 +5050,6 @@ public class Main {
             }
         }
 
-        // URL borligini tekshirish
         private boolean containsUrl(String text) {
             if (text == null) return false;
             String lowerText = text.toLowerCase();
@@ -5133,7 +5074,6 @@ public class Main {
             return false;
         }
 
-        // Xabarni o'chirish
         private void deleteMessage(Long chatId, Integer messageId) {
             try {
                 DeleteMessage deleteMessage = new DeleteMessage();
@@ -5145,7 +5085,6 @@ public class Main {
             }
         }
 
-        // Ogohlantirish xabarini yuborish
         private void sendWarningMessage(Long chatId, Long userId) {
             try {
                 SendMessage warning = new SendMessage();
@@ -5157,7 +5096,6 @@ public class Main {
             }
         }
 
-        // Guruh yoki kanal ekanligini tekshirish
         private boolean isGroupOrChannel(Long chatId) {
             try {
                 Chat chat = getChat(chatId.toString());
@@ -5167,13 +5105,11 @@ public class Main {
             }
         }
 
-        // Chat ma'lumotlarini olish
         private Chat getChat(String chatId) throws TelegramApiException {
             GetChat getChat = new GetChat(chatId);
             return execute(getChat);
         }
 
-        // Matn xabarini yuborish
         private void sendText(long chatId, String text) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -5181,7 +5117,6 @@ public class Main {
             execute(msg);
         }
 
-        // Kanal postini qayta ishlash
         private void handleChannelPost(Message message) throws TelegramApiException {
             if (message.getChat().getUserName() != null &&
                     message.getChat().getUserName().equalsIgnoreCase(CHANNEL_USERNAME.replace("@", ""))) {
@@ -5190,7 +5125,6 @@ public class Main {
             checkAndDeleteAd(message);
         }
 
-        // Qo'shimcha eski metodlar uchun
         private void sendKonkursReferralSelection(long chatId) throws TelegramApiException {
             SendMessage msg = new SendMessage();
             msg.setChatId(String.valueOf(chatId));
@@ -5199,7 +5133,6 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // 5 ta qator, har qatorda 2 ta tugma
             for (int i = 1; i <= 10; i += 2) {
                 List<InlineKeyboardButton> row = new ArrayList<>();
 
@@ -5218,7 +5151,6 @@ public class Main {
                 rows.add(row);
             }
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("tech_konkurs_takliflar");
@@ -5230,7 +5162,6 @@ public class Main {
         }
 
         private void showReferralDetails(long adminId, int rank) throws TelegramApiException {
-            // Top 10 ni olish
             List<Map.Entry<Long, Integer>> topUsers = userScores.entrySet()
                     .stream()
                     .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
@@ -5245,7 +5176,6 @@ public class Main {
             Map.Entry<Long, Integer> userEntry = topUsers.get(rank - 1);
             Long userId = userEntry.getKey();
 
-            // Ushbu foydalanuvchi qo'shgan odamlarni topish
             List<Long> referrals = new ArrayList<>();
             for (Map.Entry<Long, Long> refEntry : referralMap.entrySet()) {
                 if (refEntry.getValue().equals(userId)) {
@@ -5272,7 +5202,6 @@ public class Main {
         }
 
         private void sendAdminRatingManagement(long chatId) throws TelegramApiException {
-            // Top 10 foydalanuvchini olish
             List<Map.Entry<Long, Integer>> topUsers = userScores.entrySet()
                     .stream()
                     .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
@@ -5300,7 +5229,6 @@ public class Main {
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-            // Har bir foydalanuvchi uchun tugma
             for (int i = 0; i < topUsers.size(); i++) {
                 Map.Entry<Long, Integer> entry = topUsers.get(i);
                 Long userId = entry.getKey();
@@ -5312,7 +5240,6 @@ public class Main {
                 rows.add(Collections.singletonList(userBtn));
             }
 
-            // Orqaga
             InlineKeyboardButton backBtn = new InlineKeyboardButton();
             backBtn.setText("↩️ Orqaga");
             backBtn.setCallbackData("admin_panel");
@@ -5323,4 +5250,4 @@ public class Main {
             execute(msg);
         }
     }
-}// Mushukcha yaxshi insonlarga tekinga sovg'a qilinadi.
+}
